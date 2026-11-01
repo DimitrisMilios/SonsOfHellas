@@ -244,6 +244,16 @@ func _init() -> void:
 		print("  -> FAILED: TestProvinceNode (%d errors)" % pn_failures.size())
 		for f: String in pn_failures:
 			print("     * " + f)
+
+	print("[RUNNING] TestArmyNode...")
+	var an_failures: Array[String] = TestArmyNode.run_all_tests()
+	if an_failures.is_empty():
+		print("  -> PASSED: TestArmyNode")
+	else:
+		total_failures += an_failures.size()
+		print("  -> FAILED: TestArmyNode (%d errors)" % an_failures.size())
+		for f: String in an_failures:
+			print("     * " + f)
 			
 	print("\n------------------------------------------")
 	if total_failures == 0:
