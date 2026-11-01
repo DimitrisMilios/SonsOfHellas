@@ -29,17 +29,34 @@ extends Resource
 func can_afford(cost: int) -> bool:
 	return cost >= 0 and treasury >= cost
 
-func deduct_treasury(cost: int) -> bool:
+func deduct_treasury(cost: int, force_bankruptcy: bool = false) -> bool:
 	if cost < 0:
 		return false
 	if can_afford(cost):
 		treasury -= cost
 		return true
+	elif force_bankruptcy:
+		treasury = 0
+		set_bankrupt(true)
+		return false
 	return false
 
 func add_treasury(amount: int) -> void:
 	if amount > 0:
 		treasury += amount
+
+## Calculates total clan net food balance across all held provinces.
+func calculate_net_food_balance(provinces: Array) -> int:
+	var total_food: int = 0
+	for p_variant: Variant in provinces:
+		if p_variant is ProvinceData:
+			var prov: ProvinceData = p_variant
+			if prov.owner_faction_id == faction_id or held_province_ids.has(prov.province_id):
+				for slot: BuildingSlotData in prov.building_slots:
+					if slot != null and slot.building_data != null and not slot.is_under_construction:
+						total_food += slot.building_data.get_net_food_delta()
+	food_balance = total_food
+	return food_balance
 
 ## Toggles bankruptcy state and sets/clears capital economic stagnation penalties.
 func set_bankrupt(bankrupt: bool) -> void:
