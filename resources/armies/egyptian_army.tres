@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ArmyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ArmyData.gd" id="1_army"]
+[ext_resource type="Resource" path="res://resources/units/macedonian_phalangites.tres" id="2_phalanx"]
+[ext_resource type="Resource" path="res://resources/units/cretan_archers.tres" id="3_archer"]
+[ext_resource type="Resource" path="res://resources/units/athenian_hoplites.tres" id="4_machimoi"]
+
+[resource]
+script = ExtResource("1_army")
+army_id = "egyptian_royal_guard"
+army_name = "Ptolemaic Royal Guard"
+owner_faction_id = "egypt"
+current_province_id = "alexandria"
+general_leadership_rating = 1.25
+units = [ExtResource("2_phalanx"), ExtResource("4_machimoi"), ExtResource("3_archer")]
+current_action_points = 100.0
+max_action_points = 100.0
+stance = 0

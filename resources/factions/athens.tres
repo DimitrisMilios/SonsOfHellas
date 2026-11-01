@@ -5,9 +5,8 @@
 [resource]
 script = ExtResource("1_faction")
 faction_id = "athens"
-faction_name = "Athens"
-faction_color = Color(0.15, 0.45, 0.85, 1)
+faction_name = "Athens (Delian League)"
+faction_color = Color(0.15, 0.45, 0.85, 1.0)
 is_player = false
-treasury = 1800
-total_income = 0
-total_upkeep = 0
+treasury = 1500
+base_purse = 3500

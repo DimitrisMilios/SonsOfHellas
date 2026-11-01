@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
+
+[resource]
+script = ExtResource("1_prov")
+province_id = "roma"
+province_name = "Roma"
+owner_faction_id = "rome"
+map_position = Vector2(806.4, 323.5)
+adjacent_province_ids = ["tarentum", "massalia"]
+settlement_level = 4
+settlement_tier = 4
+region_wealth = 3600.0
+public_order = 100.0

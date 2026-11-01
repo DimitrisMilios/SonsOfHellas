@@ -1,23 +1,15 @@
-[gd_resource type="Resource" script_class="ProvinceData" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
-[ext_resource type="Resource" path="res://resources/buildings/hoplite_barracks.tres" id="2_barracks"]
-[ext_resource type="Resource" path="res://resources/units/spartan_hoplites.tres" id="3_hoplite"]
-[ext_resource type="Resource" path="res://resources/buildings/agora.tres" id="4_agora"]
 
 [resource]
 script = ExtResource("1_prov")
 province_id = "sparta"
 province_name = "Sparta"
 owner_faction_id = "sparta"
+map_position = Vector2(1217.2, 578.7)
+adjacent_province_ids = ["corinth", "knossos"]
+settlement_level = 3
 settlement_tier = 3
-public_order = 85.0
-public_order_trend = 1.0
-base_tax = 180.0
-growth_rate = 6.0
-current_population = 15000
-max_building_slots = 4
-building_slots = [ExtResource("4_agora"), ExtResource("2_barracks")]
-garrison_units = [ExtResource("3_hoplite"), ExtResource("3_hoplite")]
-adjacent_province_ids = ["corinth"]
-map_position = Vector2(350, 620)
+region_wealth = 2200.0
+public_order = 100.0

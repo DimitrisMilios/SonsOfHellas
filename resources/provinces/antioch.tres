@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
+
+[resource]
+script = ExtResource("1_prov")
+province_id = "antioch"
+province_name = "Antioch"
+owner_faction_id = "seleucid"
+map_position = Vector2(1785.7, 624.8)
+adjacent_province_ids = ["ephesus", "sinope", "tyre"]
+settlement_level = 4
+settlement_tier = 4
+region_wealth = 3500.0
+public_order = 100.0

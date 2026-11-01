@@ -51,19 +51,37 @@ func _ensure_references() -> void:
 
 func _load_default_presets_if_empty() -> void:
 	if faction_resources.is_empty():
-		faction_resources.append(load("res://resources/factions/sparta.tres") as FactionData)
-		faction_resources.append(load("res://resources/factions/athens.tres") as FactionData)
-		faction_resources.append(load("res://resources/factions/thebes.tres") as FactionData)
+		var fac_list: Array[String] = [
+			"sparta", "athens", "thebes", "corinth", "macedon",
+			"rome", "carthage", "egypt", "seleucid", "thrace", "knossos", "rhodes"
+		]
+		for fid: String in fac_list:
+			var path: String = "res://resources/factions/%s.tres" % fid
+			if ResourceLoader.exists(path):
+				faction_resources.append(load(path) as FactionData)
 
 	if province_resources.is_empty():
-		province_resources.append(load("res://resources/provinces/sparta.tres") as ProvinceData)
-		province_resources.append(load("res://resources/provinces/corinth.tres") as ProvinceData)
-		province_resources.append(load("res://resources/provinces/athens.tres") as ProvinceData)
-		province_resources.append(load("res://resources/provinces/thebes.tres") as ProvinceData)
+		var prov_list: Array[String] = [
+			"sparta", "athens", "thebes", "corinth", "delphi",
+			"larissa", "pella", "byzantium", "knossos", "rhodos",
+			"roma", "tarentum", "syracuse", "massalia",
+			"carthago", "cyrene", "alexandria", "memphis",
+			"ephesus", "pergamum", "sinope", "antioch", "tyre", "jerusalem"
+		]
+		for pid: String in prov_list:
+			var path: String = "res://resources/provinces/%s.tres" % pid
+			if ResourceLoader.exists(path):
+				province_resources.append(load(path) as ProvinceData)
 
 	if army_resources.is_empty():
-		army_resources.append(load("res://resources/armies/spartan_army.tres") as ArmyData)
-		army_resources.append(load("res://resources/armies/athenian_army.tres") as ArmyData)
+		var army_list: Array[String] = [
+			"spartan_army", "athenian_army", "macedonian_army",
+			"roman_legio", "carthaginian_army", "egyptian_army", "seleucid_army"
+		]
+		for aid: String in army_list:
+			var path: String = "res://resources/armies/%s.tres" % aid
+			if ResourceLoader.exists(path):
+				army_resources.append(load(path) as ArmyData)
 
 func _initialize_factions() -> void:
 	var turn_mgr: Node = get_node_or_null("/root/TurnManager")

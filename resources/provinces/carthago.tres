@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
+
+[resource]
+script = ExtResource("1_prov")
+province_id = "carthago"
+province_name = "Carthago"
+owner_faction_id = "carthage"
+map_position = Vector2(716.6, 590.4)
+adjacent_province_ids = ["syracuse", "cyrene"]
+settlement_level = 4
+settlement_tier = 4
+region_wealth = 3800.0
+public_order = 100.0

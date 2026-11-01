@@ -1,22 +1,15 @@
-[gd_resource type="Resource" script_class="ProvinceData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
-[ext_resource type="Resource" path="res://resources/buildings/agora.tres" id="2_agora"]
-[ext_resource type="Resource" path="res://resources/units/thessalian_cavalry.tres" id="3_cav"]
 
 [resource]
 script = ExtResource("1_prov")
 province_id = "thebes"
 province_name = "Thebes"
 owner_faction_id = "thebes"
-settlement_tier = 2
-public_order = 75.0
-public_order_trend = 1.0
-base_tax = 160.0
-growth_rate = 5.0
-current_population = 11000
-max_building_slots = 3
-building_slots = [ExtResource("2_agora")]
-garrison_units = [ExtResource("3_cav")]
-adjacent_province_ids = ["corinth", "athens"]
-map_position = Vector2(760, 250)
+map_position = Vector2(1254.5, 512.5)
+adjacent_province_ids = ["athens", "corinth", "delphi", "larissa"]
+settlement_level = 3
+settlement_tier = 3
+region_wealth = 2400.0
+public_order = 100.0

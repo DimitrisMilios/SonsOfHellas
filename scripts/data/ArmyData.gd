@@ -25,6 +25,7 @@ enum Stance {
 @export_range(0.5, 3.0, 0.1) var general_leadership_rating: float = 1.0 # Legacy compatibility
 
 @export_group("Campaign Movement")
+@export var map_position: Vector2 = Vector2.ZERO
 @export_range(0.0, 200.0, 1.0) var base_max_action_points: float = 100.0
 @export_range(0.0, 200.0, 1.0) var current_action_points: float = 100.0
 @export_range(0.0, 200.0, 1.0) var max_action_points: float = 100.0

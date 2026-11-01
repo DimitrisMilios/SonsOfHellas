@@ -337,6 +337,16 @@ func _init() -> void:
 		print("  -> FAILED: TestUIAssets (%d errors)" % asset_failures.size())
 		for f: String in asset_failures:
 			print("     * " + f)
+
+	print("[RUNNING] TestFreeMarchAndWorldSettlements...")
+	var fm_failures: Array[String] = TestFreeMarchAndWorldSettlements.run_all_tests()
+	if fm_failures.is_empty():
+		print("  -> PASSED: TestFreeMarchAndWorldSettlements")
+	else:
+		total_failures += fm_failures.size()
+		print("  -> FAILED: TestFreeMarchAndWorldSettlements (%d errors)" % fm_failures.size())
+		for f: String in fm_failures:
+			print("     * " + f)
 			
 	print("\n------------------------------------------")
 	if total_failures == 0:

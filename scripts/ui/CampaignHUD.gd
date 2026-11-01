@@ -19,8 +19,16 @@ extends CanvasLayer
 
 @onready var notification_label: Label = $SafeAreaContainer/HUDLayout/NotificationLabel
 @onready var battle_dialog: AcceptDialog = $BattleDialog
+@onready var diplomacy_dialog: AcceptDialog = get_node_or_null("DiplomacyDialog") as AcceptDialog
+@onready var diplomacy_button: Button = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/DiplomacyButton") as Button
+@onready var province_actions_container: VBoxContainer = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer") as VBoxContainer
+@onready var build_barracks_button: Button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer/BuildBarracksButton") as Button
+@onready var build_agora_button: Button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer/BuildAgoraButton") as Button
+@onready var recruit_unit_button: Button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer/RecruitUnitButton") as Button
+@onready var raise_army_button: Button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer/RaiseArmyButton") as Button
 
 var _current_selected_army_id: String = ""
+var _current_selected_province_id: String = ""
 
 ## Calculates historical season and year string given campaign turn number.
 static func format_season_year(turn_num: int) -> String:
@@ -68,6 +76,20 @@ func _ensure_references() -> void:
 		var ok_btn: Button = battle_dialog.get_ok_button()
 		if ok_btn != null:
 			ok_btn.custom_minimum_size = Vector2(120, 48)
+	if diplomacy_dialog == null:
+		diplomacy_dialog = get_node_or_null("DiplomacyDialog") as AcceptDialog
+	if diplomacy_button == null:
+		diplomacy_button = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/DiplomacyButton") as Button
+	if province_actions_container == null:
+		province_actions_container = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer") as VBoxContainer
+	if build_barracks_button == null:
+		build_barracks_button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer/BuildBarracksButton") as Button
+	if build_agora_button == null:
+		build_agora_button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer/BuildAgoraButton") as Button
+	if recruit_unit_button == null:
+		recruit_unit_button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer/RecruitUnitButton") as Button
+	if raise_army_button == null:
+		raise_army_button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer/RaiseArmyButton") as Button
 
 func _ready() -> void:
 	_ensure_references()
@@ -92,6 +114,26 @@ func _ready() -> void:
 	if end_turn_button != null:
 		if not end_turn_button.pressed.is_connected(_on_end_turn_pressed):
 			end_turn_button.pressed.connect(_on_end_turn_pressed)
+
+	if diplomacy_button != null:
+		if not diplomacy_button.pressed.is_connected(_on_diplomacy_pressed):
+			diplomacy_button.pressed.connect(_on_diplomacy_pressed)
+
+	if build_barracks_button != null:
+		if not build_barracks_button.pressed.is_connected(_on_build_barracks_pressed):
+			build_barracks_button.pressed.connect(_on_build_barracks_pressed)
+
+	if build_agora_button != null:
+		if not build_agora_button.pressed.is_connected(_on_build_agora_pressed):
+			build_agora_button.pressed.connect(_on_build_agora_pressed)
+
+	if recruit_unit_button != null:
+		if not recruit_unit_button.pressed.is_connected(_on_recruit_unit_pressed):
+			recruit_unit_button.pressed.connect(_on_recruit_unit_pressed)
+
+	if raise_army_button != null:
+		if not raise_army_button.pressed.is_connected(_on_raise_army_pressed):
+			raise_army_button.pressed.connect(_on_raise_army_pressed)
 
 	# Connect TurnManager
 	if is_inside_tree():
@@ -156,10 +198,13 @@ func update_top_bar(turn_num: int, active_faction: FactionData, gold: int, net_i
 func display_province_view_model(vm: ProvinceViewModel) -> void:
 	_ensure_references()
 	_current_selected_army_id = ""
+	_current_selected_province_id = vm.province_id if vm != null else ""
 	if info_panel != null:
 		info_panel.visible = true
 	if stance_container != null:
 		stance_container.visible = false
+	if province_actions_container != null:
+		province_actions_container.visible = true
 
 	if title_label != null:
 		title_label.text = "Province: %s" % vm.province_name
@@ -203,19 +248,22 @@ func display_province_view_model(vm: ProvinceViewModel) -> void:
 ## Binds an immutable ArmyViewModel snapshot directly to the inspection drawer.
 func display_army_view_model(vm: ArmyViewModel) -> void:
 	_ensure_references()
-	_current_selected_army_id = vm.army_id
+	_current_selected_army_id = vm.army_id if vm != null else ""
+	_current_selected_province_id = ""
 	if info_panel != null:
 		info_panel.visible = true
 	if stance_container != null:
 		stance_container.visible = true
+	if province_actions_container != null:
+		province_actions_container.visible = false
 
-	if stance_option_button != null:
+	if stance_option_button != null and vm != null:
 		stance_option_button.selected = int(vm.stance)
 
-	if title_label != null:
+	if title_label != null and vm != null:
 		title_label.text = "Army: %s" % vm.army_name
 
-	if details_label != null:
+	if details_label != null and vm != null:
 		var roster_str: String = ""
 		for card: Dictionary in vm.unit_cards:
 			roster_str += "\n - %s (T%d, Str: %.0f, Upkeep: %d)" % [
@@ -245,8 +293,11 @@ func display_army_view_model(vm: ArmyViewModel) -> void:
 func clear_selection() -> void:
 	_ensure_references()
 	_current_selected_army_id = ""
+	_current_selected_province_id = ""
 	if info_panel != null:
 		info_panel.visible = false
+	if province_actions_container != null:
+		province_actions_container.visible = false
 
 func on_turn_processing_started() -> void:
 	_ensure_references()
@@ -323,3 +374,58 @@ func show_notification(msg: String, duration: float = 2.0) -> void:
 					if notification_label != null and is_instance_valid(notification_label):
 						notification_label.visible = false
 				)
+
+func _on_build_barracks_pressed() -> void:
+	if _current_selected_province_id.is_empty():
+		return
+	var b_data: BuildingData = load("res://resources/buildings/hoplite_barracks.tres") as BuildingData
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null and campaign_mgr.has_method("construct_building"):
+		var ok: bool = campaign_mgr.construct_building(_current_selected_province_id, b_data)
+		if ok:
+			show_notification("Constructed Hoplite Barracks in %s!" % _current_selected_province_id.capitalize())
+
+func _on_build_agora_pressed() -> void:
+	if _current_selected_province_id.is_empty():
+		return
+	var b_data: BuildingData = load("res://resources/buildings/agora.tres") as BuildingData
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null and campaign_mgr.has_method("construct_building"):
+		var ok: bool = campaign_mgr.construct_building(_current_selected_province_id, b_data)
+		if ok:
+			show_notification("Constructed Grand Agora in %s!" % _current_selected_province_id.capitalize())
+
+func _on_recruit_unit_pressed() -> void:
+	if _current_selected_province_id.is_empty():
+		return
+	var u_data: UnitData = load("res://resources/units/spartan_hoplites.tres") as UnitData
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null and campaign_mgr.has_method("recruit_unit"):
+		var ok: bool = campaign_mgr.recruit_unit(_current_selected_province_id, u_data)
+		if ok:
+			show_notification("Recruited Hoplite Cohort in %s!" % _current_selected_province_id.capitalize())
+
+func _on_raise_army_pressed() -> void:
+	if _current_selected_province_id.is_empty():
+		return
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null and campaign_mgr.has_method("raise_new_army"):
+		var new_a: ArmyData = campaign_mgr.raise_new_army(_current_selected_province_id)
+		if new_a != null:
+			show_notification("Raised %s on the map! Click anywhere to march." % new_a.army_name)
+
+func _on_diplomacy_pressed() -> void:
+	_ensure_references()
+	if diplomacy_dialog != null:
+		var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+		var fac_text: String = "🏛️ HELLENIC COUNCIL & DIPLOMACY 🏛️\n\n"
+		var known_factions: Array[String] = ["athens", "thebes", "corinth", "macedon", "rome", "carthage", "egypt", "seleucid"]
+		for fac: String in known_factions:
+			var status: String = "Neutral"
+			if campaign_mgr != null and campaign_mgr.has_method("get_diplomacy_status"):
+				status = campaign_mgr.get_diplomacy_status("sparta", fac)
+			fac_text += "• %s: [%s]\n" % [fac.capitalize(), status]
+		fac_text += "\nAllied factions provide mutual defense and +75 Gold trade income per turn."
+		diplomacy_dialog.dialog_text = fac_text
+		if diplomacy_dialog.is_inside_tree():
+			diplomacy_dialog.popup_centered(Vector2i(580, 400))

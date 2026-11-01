@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
+
+[resource]
+script = ExtResource("1_prov")
+province_id = "pergamum"
+province_name = "Pergamum"
+owner_faction_id = "seleucid"
+map_position = Vector2(1414.2, 470.2)
+adjacent_province_ids = ["byzantium", "ephesus", "sinope"]
+settlement_level = 3
+settlement_tier = 3
+region_wealth = 2600.0
+public_order = 100.0

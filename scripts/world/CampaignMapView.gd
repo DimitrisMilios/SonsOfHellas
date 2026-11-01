@@ -128,8 +128,11 @@ func rebuild_from_state(provinces_map: Dictionary, armies_list: Array) -> void:
 		if a is ArmyData:
 			active_army_ids[a.army_id] = true
 			var start_pos: Vector2 = Vector2.ZERO
-			if provinces_map.has(a.current_province_id):
+			if a.map_position != Vector2.ZERO:
+				start_pos = a.map_position
+			elif provinces_map.has(a.current_province_id):
 				start_pos = provinces_map[a.current_province_id].map_position + Vector2(25.0, -25.0)
+				a.map_position = start_pos
 			spawn_army_node(a, start_pos)
 			
 	var armies_to_remove: Array[String] = []

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
+[ext_resource type="Resource" path="res://resources/units/spartan_hoplites.tres" id="2_unit"]
+[ext_resource type="Resource" path="res://resources/buildings/agora.tres" id="3_agora"]
+
+[resource]
+script = ExtResource("1_prov")
+province_id = "messene"
+province_name = "Messene"
+owner_faction_id = "sparta"
+settlement_tier = 2
+public_order = 50.0
+public_order_trend = -1.0
+base_tax = 140.0
+growth_rate = 4.0
+current_population = 11000
+max_building_slots = 3
+building_slots = [ExtResource("3_agora")]
+garrison_units = [ExtResource("2_unit")]
+adjacent_province_ids = ["sparta", "olympia"]
+map_position = Vector2(480, 940)

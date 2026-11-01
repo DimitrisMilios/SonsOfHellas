@@ -140,6 +140,15 @@ text = "Food: +5"
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="DiplomacyButton" type="Button" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(130, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+text = "🏛️ Diplomacy"
+
 [node name="EndTurnButton" type="Button" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 custom_minimum_size = Vector2(150, 48)
 layout_mode = 2
@@ -211,6 +220,46 @@ theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 text = "Details go here..."
 autowrap_mode = 2
 
+[node name="ProvinceActionsContainer" type="VBoxContainer" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BuildBarracksButton" type="Button" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+text = "🏛️ Construct Barracks (400G)"
+
+[node name="BuildAgoraButton" type="Button" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+text = "🪙 Construct Agora (350G)"
+
+[node name="RecruitUnitButton" type="Button" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+text = "⚔️ Recruit Hoplites (450G)"
+
+[node name="RaiseArmyButton" type="Button" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/ProvinceActionsContainer"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+text = "🚩 Raise Field Army"
+
 [node name="NotificationLabel" type="Label" parent="SafeAreaContainer/HUDLayout"]
 layout_mode = 1
 anchors_preset = 7
@@ -233,3 +282,8 @@ horizontal_alignment = 1
 title = "Battle Resolved"
 size = Vector2i(540, 320)
 ok_button_text = "Confirm"
+
+[node name="DiplomacyDialog" type="AcceptDialog" parent="."]
+title = "Hellenic Council & Diplomacy"
+size = Vector2i(600, 420)
+ok_button_text = "Close"

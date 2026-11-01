@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="FactionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/FactionData.gd" id="1_faction"]
+
+[resource]
+script = ExtResource("1_faction")
+faction_id = "corinth"
+faction_name = "Corinth"
+faction_color = Color(0.15, 0.58, 0.62, 1.0)
+is_player = false
+treasury = 1400
+base_purse = 3000

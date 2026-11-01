@@ -9,6 +9,11 @@ const SHIELD_SPARTA: Texture2D = preload("res://assets/ui/sparta_shield.png")
 const SHIELD_ATHENS: Texture2D = preload("res://assets/ui/athens_shield.png")
 const SHIELD_THEBES: Texture2D = preload("res://assets/ui/thebes_shield.png")
 const SHIELD_CORINTH: Texture2D = preload("res://assets/ui/corinth_shield.png")
+const SHIELD_ROME: Texture2D = preload("res://assets/ui/rome_shield.png")
+const SHIELD_CARTHAGE: Texture2D = preload("res://assets/ui/carthage_shield.png")
+const SHIELD_EGYPT: Texture2D = preload("res://assets/ui/egypt_shield.png")
+const SHIELD_MACEDON: Texture2D = preload("res://assets/ui/macedon_shield.png")
+const SHIELD_SELEUCID: Texture2D = preload("res://assets/ui/seleucid_shield.png")
 
 const TIER_NAMES: Dictionary = {
 	1: "Fort",
@@ -92,13 +97,25 @@ func get_faction_color() -> Color:
 
 	match fid:
 		"sparta":
-			return Color(0.80, 0.15, 0.15, 0.85)
+			return Color(0.85, 0.15, 0.15, 0.85)
 		"athens":
 			return Color(0.15, 0.45, 0.85, 0.85)
 		"thebes":
-			return Color(0.85, 0.65, 0.10, 0.85)
-		"faction_rebels":
-			return Color(0.35, 0.35, 0.35, 0.85)
+			return Color(0.85, 0.65, 0.12, 0.85)
+		"corinth":
+			return Color(0.15, 0.58, 0.62, 0.85)
+		"rome":
+			return Color(0.75, 0.10, 0.12, 0.85)
+		"carthage":
+			return Color(0.55, 0.15, 0.50, 0.85)
+		"egypt":
+			return Color(0.10, 0.60, 0.65, 0.85)
+		"macedon", "thessaly":
+			return Color(0.45, 0.15, 0.60, 0.85)
+		"seleucid", "pontus":
+			return Color(0.85, 0.45, 0.15, 0.85)
+		"thrace":
+			return Color(0.60, 0.40, 0.20, 0.85)
 		_:
 			return Color(0.35, 0.45, 0.60, 0.80)
 
@@ -118,8 +135,18 @@ func get_faction_shield() -> Texture2D:
 			return SHIELD_THEBES
 		"corinth":
 			return SHIELD_CORINTH
+		"rome":
+			return SHIELD_ROME
+		"carthage":
+			return SHIELD_CARTHAGE
+		"egypt":
+			return SHIELD_EGYPT
+		"macedon", "thessaly":
+			return SHIELD_MACEDON
+		"seleucid", "pontus":
+			return SHIELD_SELEUCID
 		_:
-			return null
+			return SHIELD_SPARTA
 
 ## Recomputes touch hit-target radius on camera zoom change.
 func set_zoom(zoom_x: float) -> void:
@@ -138,37 +165,42 @@ func _draw() -> void:
 	var fill_color: Color = get_faction_color()
 	var radius: float = BASE_RADIUS + float(tier * 3.0)
 	
-	draw_circle(Vector2.ZERO, radius, fill_color)
+	# 1. Subtle drop-shadow on ground
+	draw_circle(Vector2(2.0, 4.0), radius * 0.75, Color(0.0, 0.0, 0.0, 0.35))
 	
-	# Selection / hover outline
-	var border_color: Color = Color.GOLD if is_selected else (Color.WHITE if is_hovered else Color.BLACK)
-	var border_width: float = 4.0 if (is_selected or is_hovered) else 2.5
-	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 32, border_color, border_width)
+	# 2. Carved stone plinth foundation
+	draw_circle(Vector2.ZERO, radius * 0.72, Color(0.20, 0.18, 0.16, 0.75))
+	draw_arc(Vector2.ZERO, radius * 0.72, 0.0, TAU, 36, fill_color, 3.0)
 	
-	# Settlement visual icon (Acropolis or Fort)
+	# 3. Selection / hover glowing aura
+	if is_selected:
+		draw_arc(Vector2.ZERO, radius * 0.88, 0.0, TAU, 48, Color(1.0, 0.84, 0.0, 0.9), 3.5)
+	elif is_hovered:
+		draw_arc(Vector2.ZERO, radius * 0.82, 0.0, TAU, 36, Color(1.0, 1.0, 1.0, 0.8), 2.0)
+	
+	# 4. Settlement visual icon (3D Acropolis or Fort)
 	var city_tex: Texture2D = TEX_ACROPOLIS if tier >= 3 else TEX_FORT
 	if city_tex != null:
-		var icon_sz: Vector2 = Vector2(44.0, 44.0)
-		var icon_rect: Rect2 = Rect2(-icon_sz.x / 2.0, -icon_sz.y / 2.0 - 4.0, icon_sz.x, icon_sz.y)
+		var icon_sz: Vector2 = Vector2(52.0, 52.0) if tier >= 3 else Vector2(44.0, 44.0)
+		var icon_rect: Rect2 = Rect2(-icon_sz.x * 0.5, -icon_sz.y * 0.65, icon_sz.x, icon_sz.y)
 		draw_texture_rect(city_tex, icon_rect, false)
 
-	# Faction heraldic shield crest (top right of city)
+	# 5. Faction heraldic shield crest (top right)
 	var shield_tex: Texture2D = get_faction_shield()
 	if shield_tex != null:
 		var shield_sz: Vector2 = Vector2(28.0, 28.0)
-		var shield_rect: Rect2 = Rect2(radius * 0.45, -radius * 0.85, shield_sz.x, shield_sz.y)
+		var shield_rect: Rect2 = Rect2(12.0, -38.0, shield_sz.x, shield_sz.y)
 		draw_texture_rect(shield_tex, shield_rect, false)
 
-	# Unrest warning indicator ring and badge if has_unrest_alert()
+	# 6. Unrest warning indicator ring and badge if has_unrest_alert()
 	if has_unrest_alert():
 		var alert_color: Color = Color.RED
-		draw_arc(Vector2.ZERO, radius + 6.0, 0.0, TAU, 32, alert_color, 3.5)
-		# Red alert badge in top-right corner
-		var badge_pos: Vector2 = Vector2(radius * 0.70, -radius * 0.70)
-		draw_circle(badge_pos, 8.0, Color.RED)
-		draw_circle(badge_pos, 4.0, Color.WHITE)
+		draw_arc(Vector2.ZERO, radius * 0.80 + 6.0, 0.0, TAU, 32, alert_color, 3.0)
+		var badge_pos: Vector2 = Vector2(radius * 0.55, -radius * 0.55)
+		draw_circle(badge_pos, 7.0, Color.RED)
+		draw_circle(badge_pos, 3.5, Color.WHITE)
 		
-	# Settlement tier pips along bottom
+	# 7. Settlement tier pips along bottom
 	for i in range(tier):
-		var pip_x: float = -radius + 16.0 + (float(i) * 12.0)
-		draw_circle(Vector2(pip_x, radius - 12.0), 3.5, Color.GOLD)
+		var pip_x: float = -radius * 0.45 + (float(i) * 12.0)
+		draw_circle(Vector2(pip_x, radius * 0.45), 3.0, Color.GOLD)

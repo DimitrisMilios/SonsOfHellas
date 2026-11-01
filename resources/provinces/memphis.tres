@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
+
+[resource]
+script = ExtResource("1_prov")
+province_id = "memphis"
+province_name = "Memphis"
+owner_faction_id = "egypt"
+map_position = Vector2(1582.5, 961.0)
+adjacent_province_ids = ["alexandria", "jerusalem"]
+settlement_level = 3
+settlement_tier = 3
+region_wealth = 3000.0
+public_order = 100.0

@@ -135,6 +135,9 @@ func handle_world_tap(tap_world_pos: Vector2, custom_candidates: Array = [], zoo
 
 	var pick: Dictionary = CampaignInputRouter.pick_candidate(tap_world_pos, candidates, selected_entity_id)
 	if not pick.get("hit", false):
+		if selected_army != null and tap_world_pos.x >= -100.0 and tap_world_pos.x <= 2200.0 and tap_world_pos.y >= -100.0 and tap_world_pos.y <= 1200.0:
+			execute_free_march(selected_army, tap_world_pos)
+			return
 		clear_selection()
 		return
 
@@ -142,6 +145,15 @@ func handle_world_tap(tap_world_pos: Vector2, custom_candidates: Array = [], zoo
 	var hit_type: String = str(pick.get("type", ""))
 
 	if hit_type == "army":
+		if selected_army != null and selected_army.army_id != hit_id:
+			var target_army: ArmyData = null
+			for other_a: ArmyData in armies:
+				if other_a != null and other_a.army_id == hit_id:
+					target_army = other_a
+					break
+			if target_army != null and target_army.owner_faction_id != selected_army.owner_faction_id:
+				execute_free_march(selected_army, _get_army_world_position(target_army))
+				return
 		for a: ArmyData in armies:
 			if a != null and a.army_id == hit_id:
 				select_army(a)
@@ -156,7 +168,8 @@ func handle_world_tap(tap_world_pos: Vector2, custom_candidates: Array = [], zoo
 					execute_army_move(selected_army, hit_id)
 					return
 				else:
-					move_rejected.emit(validation["reason"])
+					# Free-march towards distant target province!
+					execute_free_march(selected_army, prov.map_position + Vector2(25.0, -25.0))
 					return
 			select_province(prov)
 
@@ -334,3 +347,200 @@ func _refresh_faction_economics(faction: FactionData) -> void:
 	
 	faction.total_income = total_inc
 	faction.total_upkeep = total_upk
+
+## Returns world map position of army
+func _get_army_world_position(army: ArmyData) -> Vector2:
+	if army == null:
+		return Vector2.ZERO
+	if army.map_position != Vector2.ZERO:
+		return army.map_position
+	if provinces.has(army.current_province_id):
+		return provinces[army.current_province_id].map_position + Vector2(25.0, -25.0)
+	return Vector2.ZERO
+
+## Free-march movement across open campaign terrain
+func execute_free_march(army: ArmyData, destination: Vector2) -> bool:
+	if army == null:
+		return false
+	if is_inside_tree():
+		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+		if turn_mgr != null and turn_mgr.has_method("can_accept_command"):
+			if not turn_mgr.can_accept_command():
+				move_rejected.emit("Cannot move while turn is processing.")
+				return false
+
+	if army.current_action_points <= 0.001:
+		move_rejected.emit("Army has depleted all Action Points this turn.")
+		return false
+
+	var from_pos: Vector2 = _get_army_world_position(army)
+	var total_dist: float = from_pos.distance_to(destination)
+	if total_dist < 10.0:
+		clear_selection()
+		return false
+
+	# 2.5 pixels per 1 AP (e.g. 100 AP = 250 px max march per turn)
+	const PIXELS_PER_AP: float = 2.5
+	var ap_needed: float = total_dist / PIXELS_PER_AP
+	var ap_spent: float = minf(ap_needed, army.current_action_points)
+	var actual_dist: float = ap_spent * PIXELS_PER_AP
+	var march_target: Vector2 = from_pos.move_toward(destination, actual_dist)
+
+	# Deduct Action Points
+	army.consume_action_points(ap_spent)
+	army.map_position = march_target
+
+	# Check settlement arrival (within 45px of any province center)
+	var arrived_prov: ProvinceData = null
+	for p: ProvinceData in provinces.values():
+		if p != null and p.map_position.distance_to(march_target) <= 45.0:
+			arrived_prov = p
+			march_target = p.map_position + Vector2(25.0, -25.0)
+			army.map_position = march_target
+			break
+
+	if arrived_prov != null:
+		army.current_province_id = arrived_prov.province_id
+	else:
+		army.current_province_id = ""
+
+	# Animate node movement visually
+	if army_nodes.has(army.army_id):
+		var node: ArmyNode = army_nodes[army.army_id] as ArmyNode
+		if node != null and is_instance_valid(node):
+			node.animate_move_to(march_target, 0.40)
+
+	army_movement_completed.emit(army, army.current_province_id)
+
+	# Check for enemy collision
+	var hostile_enemy: ArmyData = null
+	for other_a: ArmyData in armies:
+		if other_a != null and other_a != army and other_a.owner_faction_id != army.owner_faction_id and not other_a.units.is_empty():
+			var other_pos: Vector2 = _get_army_world_position(other_a)
+			if other_pos.distance_to(march_target) <= 45.0:
+				hostile_enemy = other_a
+				break
+
+	if hostile_enemy != null:
+		var battle_result: BattleResult = AutoResolveEngine.resolve_battle(army, hostile_enemy, {"is_settlement_siege": false})
+		AutoResolveEngine.apply_battle_result(battle_result, army, hostile_enemy)
+		_handle_post_battle_armies(battle_result, arrived_prov)
+		battle_triggered.emit(battle_result)
+	elif arrived_prov != null and arrived_prov.owner_faction_id != "" and arrived_prov.owner_faction_id != army.owner_faction_id:
+		# Settlement siege assault
+		_execute_siege_assault(army, arrived_prov)
+
+	if selected_army == army:
+		army_selected.emit(army)
+	return true
+
+func _execute_siege_assault(army: ArmyData, target_province: ProvinceData) -> void:
+	if not target_province.garrison_units.is_empty():
+		var garrison_army: ArmyData = ArmyData.new()
+		garrison_army.army_id = "garrison_" + target_province.province_id
+		garrison_army.army_name = "%s Garrison" % target_province.province_name
+		garrison_army.owner_faction_id = target_province.owner_faction_id
+		garrison_army.units = target_province.garrison_units.duplicate()
+		garrison_army.general_command_stars = 1
+		garrison_army.stance = ArmyData.Stance.ENCAMPMENT
+
+		var battle_result: BattleResult = AutoResolveEngine.resolve_battle(
+			army, garrison_army, {
+				"is_settlement_siege": true,
+				"fortification_level": target_province.settlement_level
+			}
+		)
+		AutoResolveEngine.apply_battle_result(battle_result, army, garrison_army)
+		target_province.garrison_units = garrison_army.units.duplicate()
+		
+		if battle_result.attacker_won:
+			_transfer_province_ownership(target_province, army.owner_faction_id)
+			army.current_province_id = target_province.province_id
+			army_movement_completed.emit(army, target_province.province_id)
+		battle_triggered.emit(battle_result)
+	else:
+		_transfer_province_ownership(target_province, army.owner_faction_id)
+		army.current_province_id = target_province.province_id
+		army_movement_completed.emit(army, target_province.province_id)
+
+## Builds or upgrades infrastructure in a held province.
+func construct_building(province_id: String, building: BuildingData) -> bool:
+	if not provinces.has(province_id) or building == null:
+		return false
+	var prov: ProvinceData = provinces[province_id]
+	var turn_mgr: Node = get_node_or_null("/root/TurnManager") if is_inside_tree() else null
+	var active_fac: FactionData = turn_mgr.get_active_faction() if (turn_mgr != null and turn_mgr.has_method("get_active_faction")) else null
+	if active_fac != null and active_fac.treasury < building.build_cost:
+		move_rejected.emit("Insufficient treasury (%d Gold required)." % building.build_cost)
+		return false
+
+	if active_fac != null:
+		active_fac.deduct_treasury(building.build_cost)
+		if turn_mgr != null and turn_mgr.has_signal("player_gold_changed") and active_fac.is_player:
+			turn_mgr.player_gold_changed.emit(active_fac.treasury, -building.build_cost)
+
+	var slot: BuildingSlotData = BuildingSlotData.new()
+	slot.slot_index = prov.building_slots.size()
+	slot.building_data = building
+	prov.building_slots.append(slot)
+	prov.region_wealth += 150.0
+	province_selected.emit(prov)
+	return true
+
+## Recruits a unit into a province's garrison or stationed army.
+func recruit_unit(province_id: String, unit: UnitData) -> bool:
+	if not provinces.has(province_id) or unit == null:
+		return false
+	var prov: ProvinceData = provinces[province_id]
+	var turn_mgr: Node = get_node_or_null("/root/TurnManager") if is_inside_tree() else null
+	var active_fac: FactionData = turn_mgr.get_active_faction() if (turn_mgr != null and turn_mgr.has_method("get_active_faction")) else null
+	if active_fac != null and active_fac.treasury < unit.recruitment_cost:
+		move_rejected.emit("Insufficient treasury (%d Gold required)." % unit.recruitment_cost)
+		return false
+
+	if active_fac != null:
+		active_fac.deduct_treasury(unit.recruitment_cost)
+		if turn_mgr != null and turn_mgr.has_signal("player_gold_changed") and active_fac.is_player:
+			turn_mgr.player_gold_changed.emit(active_fac.treasury, -unit.recruitment_cost)
+
+	prov.garrison_units.append(unit)
+	province_selected.emit(prov)
+	return true
+
+## Raises a new field army stack outside a friendly settlement.
+func raise_new_army(province_id: String, faction_id: String = "sparta") -> ArmyData:
+	if not provinces.has(province_id):
+		return null
+	var prov: ProvinceData = provinces[province_id]
+	var new_army: ArmyData = ArmyData.new()
+	new_army.army_id = "%s_army_%d" % [faction_id, armies.size() + 1]
+	new_army.army_name = "%s Host" % prov.province_name
+	new_army.owner_faction_id = faction_id
+	new_army.current_province_id = ""
+	new_army.map_position = prov.map_position + Vector2(30.0, -30.0)
+	new_army.current_action_points = 100.0
+	new_army.max_action_points = 100.0
+
+	var hoplite_unit: UnitData = load("res://resources/units/spartan_hoplites.tres") as UnitData
+	if hoplite_unit != null:
+		new_army.units.append(hoplite_unit)
+
+	register_army(new_army)
+	select_army(new_army)
+	return new_army
+
+# --- Diplomacy Management ---
+var diplomatic_agreements: Dictionary = {}
+
+func get_diplomacy_status(fac_a: String, fac_b: String) -> String:
+	var k1: String = "%s_%s" % [fac_a, fac_b]
+	var k2: String = "%s_%s" % [fac_b, fac_a]
+	if diplomatic_agreements.has(k1):
+		return diplomatic_agreements[k1]
+	if diplomatic_agreements.has(k2):
+		return diplomatic_agreements[k2]
+	return "Neutral"
+
+func set_diplomacy_status(fac_a: String, fac_b: String, status: String) -> void:
+	var k1: String = "%s_%s" % [fac_a, fac_b]
+	diplomatic_agreements[k1] = status

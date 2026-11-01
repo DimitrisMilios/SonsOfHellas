@@ -5,6 +5,7 @@ var army_id: String = ""
 var army_name: String = ""
 var owner_faction_id: String = ""
 var current_province_id: String = ""
+var map_position: Vector2 = Vector2.ZERO
 var stance: ArmyData.Stance = ArmyData.Stance.NORMAL
 var stance_name: String = "Normal"
 var current_action_points: float = 100.0
@@ -24,6 +25,7 @@ static func from_army_data(army: ArmyData) -> ArmyViewModel:
 	vm.army_name = army.army_name
 	vm.owner_faction_id = army.owner_faction_id
 	vm.current_province_id = army.current_province_id
+	vm.map_position = army.map_position
 	vm.stance = army.stance
 	vm.stance_name = army.get_stance_name()
 	vm.current_action_points = army.current_action_points

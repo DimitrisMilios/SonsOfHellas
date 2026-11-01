@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ArmyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ArmyData.gd" id="1_army"]
+[ext_resource type="Resource" path="res://resources/units/macedonian_phalangites.tres" id="2_sarissa"]
+[ext_resource type="Resource" path="res://resources/units/thessalian_cavalry.tres" id="3_cav"]
+[ext_resource type="Resource" path="res://resources/units/thracian_peltasts.tres" id="4_peltast"]
+
+[resource]
+script = ExtResource("1_army")
+army_id = "macedonian_vanguard"
+army_name = "Argead Companion Phalanx"
+owner_faction_id = "macedon"
+current_province_id = "pella"
+general_leadership_rating = 1.35
+units = [ExtResource("2_sarissa"), ExtResource("2_sarissa"), ExtResource("3_cav"), ExtResource("4_peltast")]
+current_action_points = 100.0
+max_action_points = 100.0
+stance = 0

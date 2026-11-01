@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ArmyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ArmyData.gd" id="1_army"]
+[ext_resource type="Resource" path="res://resources/units/macedonian_phalangites.tres" id="2_silver"]
+[ext_resource type="Resource" path="res://resources/units/thessalian_cavalry.tres" id="3_cata"]
+[ext_resource type="Resource" path="res://resources/units/cretan_archers.tres" id="4_archer"]
+
+[resource]
+script = ExtResource("1_army")
+army_id = "seleucid_silver_shields"
+army_name = "Seleucid Royal Vanguard"
+owner_faction_id = "seleucid"
+current_province_id = "antioch"
+general_leadership_rating = 1.3
+units = [ExtResource("2_silver"), ExtResource("3_cata"), ExtResource("4_archer")]
+current_action_points = 100.0
+max_action_points = 100.0
+stance = 0

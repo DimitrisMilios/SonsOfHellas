@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
+
+[resource]
+script = ExtResource("1_prov")
+province_id = "larissa"
+province_name = "Larissa"
+owner_faction_id = "thessaly"
+map_position = Vector2(1216.8, 442.6)
+adjacent_province_ids = ["delphi", "thebes", "pella"]
+settlement_level = 2
+settlement_tier = 2
+region_wealth = 1800.0
+public_order = 100.0

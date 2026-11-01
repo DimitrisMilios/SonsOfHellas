@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/UnitData.gd" id="1_unit"]
+
+[resource]
+script = ExtResource("1_unit")
+unit_id = "roman_legionaries"
+display_name = "Roman Legionaries"
+tier = 3
+role = 0
+base_strength = 165.0
+armor = 40.0
+recruitment_cost = 400
+turn_upkeep = 55
