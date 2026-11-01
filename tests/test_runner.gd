@@ -29,6 +29,7 @@ const TestAudioManager = preload("res://tests/test_audio_manager.gd")
 const TestSaveResilience = preload("res://tests/test_save_resilience.gd")
 const TestTurnCommitReplay = preload("res://tests/test_turn_commit_replay.gd")
 const TestTitleScreen = preload("res://tests/test_title_screen.gd")
+const TestUIAssets = preload("res://tests/test_ui_assets.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -325,6 +326,16 @@ func _init() -> void:
 		total_failures += ts_failures.size()
 		print("  -> FAILED: TestTitleScreen (%d errors)" % ts_failures.size())
 		for f: String in ts_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestUIAssets...")
+	var asset_failures: Array[String] = TestUIAssets.run_all_tests()
+	if asset_failures.is_empty():
+		print("  -> PASSED: TestUIAssets")
+	else:
+		total_failures += asset_failures.size()
+		print("  -> FAILED: TestUIAssets (%d errors)" % asset_failures.size())
+		for f: String in asset_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")
