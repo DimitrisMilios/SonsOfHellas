@@ -45,6 +45,9 @@ extends Resource
 @export_group("Social & Public Order")
 @export_range(-100.0, 100.0, 1.0) var public_order: float = 100.0
 @export var consecutive_unrest_turns: int = 0
+@export var unrest_pressure: int = 0
+@export var rebellion_cooldown: int = 0
+@export var calm_margin: float = 10.0
 @export var resistance_to_occupation_decay: int = 0
 @export_range(-20.0, 20.0, 0.5) var public_order_trend: float = 0.0 # Legacy compatibility
 
@@ -105,10 +108,15 @@ func set_tax_exemption(exempt: bool) -> void:
 	tax_exemption_status = exempt
 
 ## Updates consecutive unrest counter based on current public order.
-## Rule: 2 consecutive turns of PO < 0 triggers armed rebellion.
+## Uses asymmetric unrest_pressure: +1 on PO < 0, -1 on PO >= calm_margin, no change in between.
+## Rule: unrest_pressure >= 2 triggers armed rebellion.
 func update_unrest_counter() -> void:
 	if public_order < 0.0:
 		consecutive_unrest_turns += 1
+		unrest_pressure += 1
+	elif public_order >= calm_margin:
+		consecutive_unrest_turns = 0
+		unrest_pressure = maxi(0, unrest_pressure - 1)
 	else:
 		consecutive_unrest_turns = 0
 
@@ -158,6 +166,9 @@ func clone() -> ProvinceData:
 	copy.population_surplus = population_surplus
 	copy.public_order = public_order
 	copy.consecutive_unrest_turns = consecutive_unrest_turns
+	copy.unrest_pressure = unrest_pressure
+	copy.rebellion_cooldown = rebellion_cooldown
+	copy.calm_margin = calm_margin
 	copy.resistance_to_occupation_decay = resistance_to_occupation_decay
 	
 	copy.building_slots.clear()
@@ -212,6 +223,9 @@ func to_dict() -> Dictionary:
 		"population_surplus": population_surplus,
 		"tax_exemption_status": tax_exemption_status,
 		"consecutive_unrest_turns": consecutive_unrest_turns,
+		"unrest_pressure": unrest_pressure,
+		"rebellion_cooldown": rebellion_cooldown,
+		"calm_margin": calm_margin,
 		"resistance_to_occupation_decay": resistance_to_occupation_decay,
 		"tax_level_upper": tax_level_upper,
 		"tax_level_lower": tax_level_lower,
@@ -235,6 +249,9 @@ static func from_dict(dict: Dictionary) -> ProvinceData:
 	prov.population_surplus = dict.get("population_surplus", 0)
 	prov.tax_exemption_status = dict.get("tax_exemption_status", false)
 	prov.consecutive_unrest_turns = dict.get("consecutive_unrest_turns", 0)
+	prov.unrest_pressure = dict.get("unrest_pressure", 0)
+	prov.rebellion_cooldown = dict.get("rebellion_cooldown", 0)
+	prov.calm_margin = float(dict.get("calm_margin", 10.0))
 	prov.resistance_to_occupation_decay = dict.get("resistance_to_occupation_decay", 0)
 	prov.tax_level_upper = dict.get("tax_level_upper", 3)
 	prov.tax_level_lower = dict.get("tax_level_lower", 3)
