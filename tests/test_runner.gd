@@ -194,6 +194,16 @@ func _init() -> void:
 		print("  -> FAILED: TestCampaignMapView (%d errors)" % mv_failures.size())
 		for f: String in mv_failures:
 			print("     * " + f)
+
+	print("[RUNNING] TestCampaignCamera...")
+	var cam_failures: Array[String] = TestCampaignCamera.run_all_tests()
+	if cam_failures.is_empty():
+		print("  -> PASSED: TestCampaignCamera")
+	else:
+		total_failures += cam_failures.size()
+		print("  -> FAILED: TestCampaignCamera (%d errors)" % cam_failures.size())
+		for f: String in cam_failures:
+			print("     * " + f)
 			
 	print("\n------------------------------------------")
 	if total_failures == 0:

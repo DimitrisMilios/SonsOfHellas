@@ -1,6 +1,10 @@
 class_name CampaignCamera
 extends Camera2D
 
+## Emitted whenever the camera's actual zoom changes, allowing passive map entities
+## to rescale their screen-space touch target hitboxes without polling per frame.
+signal zoom_changed(new_zoom: Vector2)
+
 @export_group("Pan Settings")
 @export var pan_speed: float = 650.0
 @export var drag_speed: float = 1.0
@@ -28,6 +32,7 @@ var is_mouse_dragging: bool = false
 
 func _ready() -> void:
 	target_zoom = zoom
+	zoom_changed.emit(zoom)
 
 func _process(delta: float) -> void:
 	_handle_pan_keys(delta)
@@ -108,9 +113,28 @@ func _adjust_zoom(delta_zoom: float) -> void:
 	var new_val: float = clampf(target_zoom.x + delta_zoom, min_zoom, max_zoom)
 	target_zoom = Vector2(new_val, new_val)
 
+func set_target_zoom(new_val: float) -> void:
+	var clamped: float = clampf(new_val, min_zoom, max_zoom)
+	target_zoom = Vector2(clamped, clamped)
+
+func immediate_set_zoom(new_zoom: Vector2) -> void:
+	var clamped: float = clampf(new_zoom.x, min_zoom, max_zoom)
+	zoom = Vector2(clamped, clamped)
+	target_zoom = zoom
+	zoom_changed.emit(zoom)
+
 func _smooth_zoom(delta: float) -> void:
+	var old_zoom: Vector2 = zoom
 	zoom = zoom.lerp(target_zoom, delta * zoom_smoothness)
+	if not is_equal_approx(old_zoom.x, zoom.x):
+		zoom_changed.emit(zoom)
 
 func _clamp_camera_position() -> void:
 	position.x = clampf(position.x, map_bounds_min.x, map_bounds_max.x)
 	position.y = clampf(position.y, map_bounds_min.y, map_bounds_max.y)
+
+## Transforms a 2D screen coordinate into map world coordinates.
+func screen_to_world(screen_pos: Vector2) -> Vector2:
+	if is_inside_tree():
+		return get_canvas_transform().affine_inverse() * screen_pos
+	return position + (screen_pos / zoom.x)
