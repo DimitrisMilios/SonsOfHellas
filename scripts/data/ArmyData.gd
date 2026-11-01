@@ -25,6 +25,7 @@ enum Stance {
 @export_range(0.5, 3.0, 0.1) var general_leadership_rating: float = 1.0 # Legacy compatibility
 
 @export_group("Campaign Movement")
+@export_range(0.0, 200.0, 1.0) var base_max_action_points: float = 100.0
 @export_range(0.0, 200.0, 1.0) var current_action_points: float = 100.0
 @export_range(0.0, 200.0, 1.0) var max_action_points: float = 100.0
 @export var stance: Stance = Stance.NORMAL
@@ -65,29 +66,51 @@ func consume_action_points(amount: float) -> bool:
 func reset_action_points() -> void:
 	has_retreated_this_turn = false
 	if stance == Stance.FORCED_MARCH:
-		current_action_points = max_action_points * 1.5
+		max_action_points = base_max_action_points * 1.50
+		current_action_points = max_action_points
 	elif stance == Stance.RAIDING:
-		current_action_points = max_action_points * 0.5
+		max_action_points = base_max_action_points * 0.50
+		current_action_points = max_action_points
 	else:
+		max_action_points = base_max_action_points
 		current_action_points = max_action_points
 
 ## Changes tactical stance with validity checks according to movement_stances.md.
 func set_stance(new_stance: Stance) -> bool:
+	if stance == new_stance:
+		return true
+
+	# Validation
 	if new_stance == Stance.RAIDING:
-		# Activation condition: AP spent <= 50% max AP (i.e. remaining AP >= 50% max AP)
-		if current_action_points < (0.50 * max_action_points):
+		# Activation condition: remaining AP >= 50% base max AP
+		if current_action_points < (0.50 * base_max_action_points):
 			return false
-		# Raiding stance activation costs 50% max AP
-		current_action_points = maxf(0.0, current_action_points - (0.50 * max_action_points))
+
+	# Exiting previous stance
+	if stance == Stance.FORCED_MARCH:
+		max_action_points = base_max_action_points
+		current_action_points = maxf(0.0, current_action_points - (0.50 * base_max_action_points))
+		current_action_points = minf(current_action_points, max_action_points)
+	elif stance == Stance.RAIDING:
+		max_action_points = base_max_action_points
+
+	# Applying new stance
+	if new_stance == Stance.RAIDING:
+		# Raiding stance activation costs 50% base max AP
+		current_action_points = maxf(0.0, current_action_points - (0.50 * base_max_action_points))
+		max_action_points = base_max_action_points * 0.50
+		current_action_points = minf(current_action_points, max_action_points)
 		stance = Stance.RAIDING
 		return true
 	elif new_stance == Stance.FORCED_MARCH:
-		if stance != Stance.FORCED_MARCH:
-			current_action_points += (0.50 * max_action_points)
+		max_action_points = base_max_action_points * 1.50
+		current_action_points += (0.50 * base_max_action_points)
 		stance = Stance.FORCED_MARCH
 		return true
 	else:
 		stance = new_stance
+		max_action_points = base_max_action_points
+		current_action_points = minf(current_action_points, max_action_points)
 		return true
 
 ## Marks army as having retreated this turn and expends all remaining AP.
@@ -118,6 +141,7 @@ func clone() -> ArmyData:
 	copy.general_command_stars = general_command_stars
 	copy.general_traits_bonus = general_traits_bonus
 	copy.general_leadership_rating = general_leadership_rating
+	copy.base_max_action_points = base_max_action_points
 	copy.current_action_points = current_action_points
 	copy.max_action_points = max_action_points
 	copy.stance = stance
@@ -144,6 +168,7 @@ func to_dict() -> Dictionary:
 		"general_name": general_name,
 		"general_command_stars": general_command_stars,
 		"general_traits_bonus": general_traits_bonus,
+		"base_max_action_points": base_max_action_points,
 		"current_action_points": current_action_points,
 		"max_action_points": max_action_points,
 		"stance": stance_to_string(stance),
@@ -161,6 +186,7 @@ static func from_dict(dict: Dictionary) -> ArmyData:
 	army.general_name = dict.get("general_name", "General")
 	army.general_command_stars = dict.get("general_command_stars", 1)
 	army.general_traits_bonus = float(dict.get("general_traits_bonus", 0.0))
+	army.base_max_action_points = float(dict.get("base_max_action_points", 100.0))
 	army.current_action_points = float(dict.get("current_action_points", 100.0))
 	army.max_action_points = float(dict.get("max_action_points", 100.0))
 	army.stance = string_to_stance(dict.get("stance", "NORMAL"))

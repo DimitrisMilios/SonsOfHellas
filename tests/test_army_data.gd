@@ -6,6 +6,7 @@ static func run_all_tests() -> Array[String]:
 	_test_army_defaults(failures)
 	_test_raiding_stance_activation_and_upkeep(failures)
 	_test_forced_march_ap_lifecycle(failures)
+	_test_forced_march_exploit_prevention(failures)
 	_test_retreat_rule_enforcement(failures)
 	_test_army_clone_independence(failures)
 	_test_army_serialization_round_trip(failures)
@@ -46,6 +47,10 @@ static func _test_raiding_stance_activation_and_upkeep(failures: Array[String]) 
 		failures.append("Stance was not set to RAIDING")
 	if army.calculate_total_upkeep() != 50:
 		failures.append("Expected raiding upkeep to be 50% (50 gold), got: " + str(army.calculate_total_upkeep()))
+	if army.max_action_points != 50.0:
+		failures.append("Expected max AP in raiding to be 50.0, got: " + str(army.max_action_points))
+	if army.current_action_points != 20.0:
+		failures.append("Expected remaining AP after raiding cost to be 20.0, got: " + str(army.current_action_points))
 
 static func _test_forced_march_ap_lifecycle(failures: Array[String]) -> void:
 	var army: ArmyData = ArmyData.new()
@@ -55,6 +60,23 @@ static func _test_forced_march_ap_lifecycle(failures: Array[String]) -> void:
 	# Forced march grants 1.5x AP
 	if army.current_action_points < 140.0:
 		failures.append("Expected Forced March to grant extended AP (>140), got: " + str(army.current_action_points))
+
+static func _test_forced_march_exploit_prevention(failures: Array[String]) -> void:
+	var army: ArmyData = ArmyData.new()
+	# Default: 100 AP, Normal stance
+	# Toggle between Normal and Forced March 10 times
+	for i in range(10):
+		army.set_stance(ArmyData.Stance.FORCED_MARCH)
+		if army.current_action_points > 150.0:
+			failures.append("AP grew beyond 150.0 during stance toggle: " + str(army.current_action_points))
+			break
+		army.set_stance(ArmyData.Stance.NORMAL)
+		if army.current_action_points > 100.0:
+			failures.append("AP exceeded 100.0 when returning to Normal: " + str(army.current_action_points))
+			break
+			
+	if army.current_action_points != 100.0:
+		failures.append("Expected AP to remain 100.0 after toggles, got: " + str(army.current_action_points))
 
 static func _test_retreat_rule_enforcement(failures: Array[String]) -> void:
 	var army: ArmyData = ArmyData.new()
