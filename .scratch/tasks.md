@@ -71,11 +71,11 @@ graph TD
 
 ---
 
-## Phase 1: Pure Data Models (Custom Resources & RefCounted)
+## Phase 1: Pure Data Models (Custom Resources & RefCounted) - [COMPLETED & VERIFIED: 100% ROCK SOLID]
 
 All models in Phase 1 inherit from `Resource` or `RefCounted`, possess zero `Node` or scene tree dependencies, and enforce strict GDScript static typing and mobile offline constraints.
 
-### Task 1.1: Comprehensive Unit Combat & Role Data Model
+### Task 1.1: Comprehensive Unit Combat & Role Data Model [COMPLETED]
 * **Target File Path**: `res://scripts/data/UnitData.gd`
 * **Description**: Expand `UnitData` to fulfill the full `UnitCard` schema from `docs/design/data_schemas.md`. Implements fine-grained combat attributes, ballistic ammo classifications, role tags for rock-paper-scissors interactions, stamina, mass, recruitment timers, and deep duplication.
 * **Concrete Inputs & Expected Outputs**:
@@ -95,7 +95,7 @@ All models in Phase 1 inherit from `Resource` or `RefCounted`, possess zero `Nod
 
 ---
 
-### Task 1.2: Building Infrastructure & Economic Output Model
+### Task 1.2: Building Infrastructure & Economic Output Model [COMPLETED]
 * **Target File Path**: `res://scripts/data/BuildingData.gd`
 * **Description**: Implement `BuildingData` corresponding to `BuildingNode` schema in `docs/design/data_schemas.md`. Encapsulates branch categorization, upgrade tiers, fixed base wealth, per-turn Positive Wealth Generation ($PWG$), empire-wide negative wealth penalties, tax modifier bonuses, food production deltas, garrison unit definitions, and unlock prerequisites.
 * **Concrete Inputs & Expected Outputs**:
@@ -115,7 +115,7 @@ All models in Phase 1 inherit from `Resource` or `RefCounted`, possess zero `Nod
 
 ---
 
-### Task 1.3: Province, Settlement Slots & Public Order Data Model
+### Task 1.3: Province, Settlement Slots & Public Order Data Model [COMPLETED]
 * **Target File Path**: `res://scripts/data/ProvinceData.gd`
 * **Description**: Overhaul `ProvinceData` to match `Settlement` schema in `docs/design/data_schemas.md` and `docs/design/settlement_economy.md`. Enforces slot capacity strictly bounded by settlement level (Tier 1 = 1 slot ... Tier 5 = 5 slots). Tracks regional wealth asset base ($W_{\text{region}}$), upper/lower tax policy levels ($L_{\text{tax}} \in [1..5]$), tax exemption flag, population surplus ($P_{\text{surplus}}$), consecutive unrest turn counter, and foreign occupation resistance decay ($U_{\text{conquest}}$).
 * **Concrete Inputs & Expected Outputs**:
@@ -133,7 +133,7 @@ All models in Phase 1 inherit from `Resource` or `RefCounted`, possess zero `Nod
 
 ---
 
-### Task 1.4: Faction Treasury, Food Network & Bankruptcy Model
+### Task 1.4: Faction Treasury, Food Network & Bankruptcy Model [COMPLETED]
 * **Target File Path**: `res://scripts/data/FactionData.gd`
 * **Description**: Expand `FactionData` to model macroeconomic state: treasury balance, base King's Purse ($I_{\text{purse}} = 3000$), trade routes revenue, vassal tribute, trade raiding income, global food network balance ($F_{\text{net}}$), empire size (held regions count for administration penalty), and bankruptcy state flags.
 * **Concrete Inputs & Expected Outputs**:
@@ -151,7 +151,7 @@ All models in Phase 1 inherit from `Resource` or `RefCounted`, possess zero `Nod
 
 ---
 
-### Task 1.5: Army Stance, Command & Action Point Model
+### Task 1.5: Army Stance, Command & Action Point Model [COMPLETED]
 * **Target File Path**: `res://scripts/data/ArmyData.gd`
 * **Description**: Expand `ArmyData` to model all tactical stances from `docs/design/movement_stances.md` (`NORMAL`, `FORCED_MARCH`, `RAIDING`, `ENCAMPMENT`, `AMBUSH`, `SIEGE`), Action Points pool, General command stars ($0\text{--}10$), passive trait bonuses, and turn retreat tracking flag (`has_retreated_this_turn`).
 * **Concrete Inputs & Expected Outputs**:
