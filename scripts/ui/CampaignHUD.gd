@@ -177,17 +177,19 @@ func display_province_view_model(vm: ProvinceViewModel) -> void:
 					buildings_list.append(b_name)
 		var buildings_str: String = ", ".join(buildings_list) if not buildings_list.is_empty() else "None"
 
-		details_label.text = """Owner: %s
-Settlement Tier: %d
-Public Order: %.1f
-Unrest Pressure: %d
-Consecutive Unrest Turns: %d
-Region Wealth: %.0f Gold
-Tax Yield: %d Gold (Upper L%d / Lower L%d)
-Building Slots (%d): %s""" % [
+		var order_status: String = "Stable" if vm.public_order >= 0.0 else "Unrest Alert"
+		details_label.text = """🏛️ Owner: %s (Tier %d Settlement)
+⚖️ Public Order: %.1f [%s]
+🔥 Unrest Pressure: %d (Consecutive: %d)
+💰 Regional Wealth: %.0f Gold
+🪙 Tax Income: %d Gold (Upper L%d / Lower L%d)
+
+🏛️ Infrastructure (%d Buildings):
+%s""" % [
 			vm.owner_faction_id.capitalize(),
 			vm.settlement_tier,
 			vm.public_order,
+			order_status,
 			vm.unrest_pressure,
 			vm.consecutive_unrest_turns,
 			vm.region_wealth,
@@ -223,12 +225,13 @@ func display_army_view_model(vm: ArmyViewModel) -> void:
 				card.get("upkeep", 0)
 			]
 
-		details_label.text = """Owner: %s
-Action Points: %.0f / %.0f
-Tactical Stance: %s
-Total Upkeep: %d Gold / turn
-Total Combat Power: %.0f
-Roster (%d units):%s""" % [
+		details_label.text = """🛡️ Faction: %s
+⚡ Action Points: %.0f / %.0f
+⚔️ Stance: %s
+💰 Upkeep: %d Gold / turn
+🏆 Combat Power: %.0f
+
+📋 Regiments (%d Units):%s""" % [
 			vm.owner_faction_id.capitalize(),
 			vm.current_action_points,
 			vm.max_action_points,

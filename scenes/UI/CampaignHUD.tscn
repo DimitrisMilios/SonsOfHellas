@@ -1,9 +1,50 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/CampaignHUD.gd" id="1_hud"]
 [ext_resource type="Script" path="res://scripts/ui/SafeAreaContainer.gd" id="2_safe"]
 [ext_resource type="Texture2D" path="res://assets/ui/coin_drachma.png" id="3_coin"]
 [ext_resource type="Texture2D" path="res://assets/ui/food_amphora.png" id="4_amphora"]
+[ext_resource type="Texture2D" path="res://assets/ui/ui_panel_topbar.png" id="5_topbar_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/ui_panel_stone.png" id="6_stone_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_bronze_normal.png" id="7_btn_norm"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_bronze_pressed.png" id="8_btn_press"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_bronze_hover.png" id="9_btn_hover"]
+[ext_resource type="Texture2D" path="res://assets/ui/btn_end_turn_medallion.png" id="10_medallion"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_topbar"]
+texture = ExtResource("5_topbar_tex")
+texture_margin_left = 16.0
+texture_margin_top = 8.0
+texture_margin_right = 16.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_stone_panel"]
+texture = ExtResource("6_stone_tex")
+texture_margin_left = 18.0
+texture_margin_top = 18.0
+texture_margin_right = 18.0
+texture_margin_bottom = 18.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_norm"]
+texture = ExtResource("7_btn_norm")
+texture_margin_left = 12.0
+texture_margin_top = 8.0
+texture_margin_right = 12.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_press"]
+texture = ExtResource("8_btn_press")
+texture_margin_left = 12.0
+texture_margin_top = 8.0
+texture_margin_right = 12.0
+texture_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_hover"]
+texture = ExtResource("9_btn_hover")
+texture_margin_left = 12.0
+texture_margin_top = 8.0
+texture_margin_right = 12.0
+texture_margin_bottom = 8.0
 
 [node name="CampaignHUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -26,6 +67,7 @@ anchors_preset = 10
 anchor_right = 1.0
 offset_bottom = 56.0
 grow_horizontal = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_topbar")
 
 [node name="MarginContainer" type="MarginContainer" parent="SafeAreaContainer/HUDLayout/TopBar"]
 layout_mode = 2
@@ -36,25 +78,29 @@ theme_override_constants/margin_bottom = 4
 
 [node name="HBoxContainer" type="HBoxContainer" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 
 [node name="GameTitle" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.96, 0.82, 0.35, 1)
 theme_override_font_sizes/font_size = 18
 text = "SONS OF HELLAS"
 
 [node name="TurnLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 theme_override_font_sizes/font_size = 15
 text = "Turn 1"
 
 [node name="SeasonLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.85, 0.85, 1)
 theme_override_font_sizes/font_size = 15
 text = "Spring, 431 BC"
 
 [node name="FactionLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.45, 0.45, 1)
 theme_override_font_sizes/font_size = 15
 text = "Active: Sparta"
 
@@ -67,11 +113,13 @@ stretch_mode = 5
 
 [node name="TreasuryLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.4, 1)
 theme_override_font_sizes/font_size = 15
 text = "Treasury: 1500 Gold"
 
 [node name="IncomeLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.9, 0.5, 1)
 theme_override_font_sizes/font_size = 15
 text = "Net: +300/turn"
 
@@ -84,6 +132,7 @@ stretch_mode = 5
 
 [node name="FoodLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.65, 1)
 theme_override_font_sizes/font_size = 15
 text = "Food: +5"
 
@@ -92,8 +141,16 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="EndTurnButton" type="Button" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(140, 48)
+custom_minimum_size = Vector2(150, 48)
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.92, 0.5, 1)
+theme_override_colors/font_pressed_color = Color(0.85, 0.75, 0.35, 1)
+theme_override_colors/font_hover_color = Color(1, 0.98, 0.7, 1)
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_hover")
+icon = ExtResource("10_medallion")
+expand_icon = true
 text = "End Turn"
 
 [node name="SelectionPanel" type="PanelContainer" parent="SafeAreaContainer/HUDLayout"]
@@ -102,12 +159,13 @@ anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -360.0
+offset_left = -370.0
 offset_top = 64.0
 offset_right = -12.0
 offset_bottom = -20.0
 grow_horizontal = 0
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxTexture_stone_panel")
 
 [node name="MarginContainer" type="MarginContainer" parent="SafeAreaContainer/HUDLayout/SelectionPanel"]
 layout_mode = 2
@@ -122,7 +180,11 @@ theme_override_constants/separation = 10
 
 [node name="TitleLabel" type="Label" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.96, 0.85, 0.45, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 20
 text = "Province Name"
 
 [node name="HSeparator" type="HSeparator" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer"]
@@ -134,6 +196,7 @@ theme_override_constants/separation = 8
 
 [node name="StanceLabel" type="Label" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/StanceContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 text = "Stance:"
 
 [node name="StanceOptionButton" type="OptionButton" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/StanceContainer"]
@@ -144,6 +207,7 @@ size_flags_horizontal = 3
 [node name="DetailsLabel" type="Label" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
 text = "Details go here..."
 autowrap_mode = 2
 
