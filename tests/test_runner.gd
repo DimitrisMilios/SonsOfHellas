@@ -8,6 +8,7 @@ const TestArmyData = preload("res://tests/test_army_data.gd")
 const TestDataRegistry = preload("res://tests/test_data_registry.gd")
 const TestEconomyCalculator = preload("res://tests/test_economy_calculator.gd")
 const TestBattleResult = preload("res://tests/test_battle_result.gd")
+const TestAutoResolveEngine = preload("res://tests/test_autoresolve_engine.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -94,6 +95,16 @@ func _init() -> void:
 		total_failures += battle_failures.size()
 		print("  -> FAILED: TestBattleResult (%d errors)" % battle_failures.size())
 		for f: String in battle_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestAutoResolveEngine...")
+	var ar_failures: Array[String] = TestAutoResolveEngine.run_all_tests()
+	if ar_failures.is_empty():
+		print("  -> PASSED: TestAutoResolveEngine")
+	else:
+		total_failures += ar_failures.size()
+		print("  -> FAILED: TestAutoResolveEngine (%d errors)" % ar_failures.size())
+		for f: String in ar_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")
