@@ -5,7 +5,9 @@ static func run_all_tests() -> Array[String]:
 	var failures: Array[String] = []
 	test_campaign_manager_move_validation(failures)
 	test_campaign_manager_movement_execution(failures)
+	test_zoc_interception_and_ap_depletion(failures)
 	test_province_transfer_on_siege_victory(failures)
+	test_battle_triggered_signal_and_roster_update(failures)
 	test_world_tap_arbitration_and_selection(failures)
 	test_stance_update(failures)
 	return failures
@@ -15,7 +17,6 @@ static func _assert(condition: bool, msg: String, failures: Array[String]) -> vo
 		failures.append(msg)
 
 static func _setup_test_manager() -> Node:
-	# Instantiate CampaignManager node directly for headless testing
 	var script: GDScript = load("res://scripts/core/CampaignManager.gd")
 	var mgr: Node = script.new()
 	
@@ -63,6 +64,7 @@ static func _setup_test_manager() -> Node:
 	u.armor = 50
 	u.melee_attack = 45
 	u.melee_defense = 40
+	u.upkeep_cost = 40
 	a1.add_unit(u)
 	
 	mgr.register_army(a1)
@@ -86,13 +88,19 @@ static func test_campaign_manager_move_validation(failures: Array[String]) -> vo
 	var v_low_ap: Dictionary = mgr.validate_army_move(army, "prov_corinth")
 	_assert(not v_low_ap["valid"], "Move with 10 AP must be rejected (cost is 40)", failures)
 	
+	# Army in Siege stance cannot move
+	army.current_action_points = 100.0
+	army.stance = ArmyData.Stance.SIEGE
+	var v_siege: Dictionary = mgr.validate_army_move(army, "prov_corinth")
+	_assert(not v_siege["valid"], "Army in Siege stance cannot move", failures)
+	
 	mgr.free()
 
 static func test_campaign_manager_movement_execution(failures: Array[String]) -> void:
 	var mgr: Node = _setup_test_manager()
 	var army: ArmyData = mgr.armies[0]
 	
-	# Make Corinth friendly so movement doesn't trigger battle
+	# Make Corinth friendly so movement doesn't trigger hostile battle
 	var corinth: ProvinceData = mgr.provinces["prov_corinth"]
 	corinth.owner_faction_id = "sparta"
 	
@@ -112,6 +120,25 @@ static func test_campaign_manager_movement_execution(failures: Array[String]) ->
 	_assert(army.current_action_points == 60.0, "Army AP should decrease by 40 (100 - 40 = 60), got: " + str(army.current_action_points), failures)
 	_assert(move_started_fired[0], "army_movement_started signal must be emitted", failures)
 	_assert(move_completed_fired[0], "army_movement_completed signal must be emitted", failures)
+	
+	mgr.free()
+
+static func test_zoc_interception_and_ap_depletion(failures: Array[String]) -> void:
+	var mgr: Node = _setup_test_manager()
+	var army: ArmyData = mgr.armies[0]
+	
+	# Corinth is owned by Athens (hostile). Moving into hostile ZoC halts movement and depletes AP to 0.
+	var corinth: ProvinceData = mgr.provinces["prov_corinth"]
+	corinth.owner_faction_id = "athens"
+	corinth.garrison_units.clear() # Undefended settlement
+	
+	var validation: Dictionary = mgr.validate_army_move(army, "prov_corinth")
+	_assert(validation["valid"], "Move to adjacent hostile Corinth should be valid to initiate engagement", failures)
+	_assert(validation.get("triggers_engagement", false), "Moving into hostile province must trigger engagement / ZoC intercept", failures)
+	
+	var ok: bool = mgr.execute_army_move(army, "prov_corinth")
+	_assert(ok, "Movement into undefended hostile province should execute capture", failures)
+	_assert(army.current_action_points == 0.0, "Hostile ZoC boundary intercept must reduce remaining AP to 0.0, got: " + str(army.current_action_points), failures)
 	
 	mgr.free()
 
@@ -136,34 +163,75 @@ static func test_province_transfer_on_siege_victory(failures: Array[String]) -> 
 	
 	mgr.free()
 
+static func test_battle_triggered_signal_and_roster_update(failures: Array[String]) -> void:
+	var mgr: Node = _setup_test_manager()
+	var spartan_army: ArmyData = mgr.armies[0]
+	
+	# Place hostile athenian army in Corinth
+	var athenian_army: ArmyData = ArmyData.new()
+	athenian_army.army_id = "athenian_army"
+	athenian_army.army_name = "Athenian Guard"
+	athenian_army.owner_faction_id = "athens"
+	athenian_army.current_province_id = "prov_corinth"
+	athenian_army.current_action_points = 100.0
+	
+	var u2: UnitData = UnitData.new()
+	u2.unit_id = "athenian_hoplite"
+	u2.display_name = "Athenian Hoplite"
+	u2.tier = 1
+	u2.unit_count = 100
+	u2.armor = 30
+	u2.melee_attack = 30
+	u2.melee_defense = 25
+	athenian_army.add_unit(u2)
+	mgr.register_army(athenian_army)
+	
+	var battle_signal_received: Array = [false]
+	var captured_result: Array = [null]
+	
+	mgr.battle_triggered.connect(func(res: BattleResult) -> void:
+		battle_signal_received[0] = true
+		captured_result[0] = res
+	)
+	
+	var ok: bool = mgr.execute_army_move(spartan_army, "prov_corinth")
+	_assert(ok, "Move against hostile army should execute combat", failures)
+	_assert(battle_signal_received[0], "battle_triggered signal must be emitted upon encounter", failures)
+	_assert(captured_result[0] != null, "BattleResult passed to battle_triggered signal must not be null", failures)
+	
+	mgr.free()
+
 static func test_world_tap_arbitration_and_selection(failures: Array[String]) -> void:
 	var mgr: Node = _setup_test_manager()
 	
-	var selected_prov_id: Array = [""]
-	var selected_army_id: Array = [""]
+	var selected_prov: Array = [null]
+	var selected_army: Array = [null]
 	
 	mgr.province_selected.connect(func(p: ProvinceData) -> void:
-		selected_prov_id[0] = p.province_id
+		selected_prov[0] = p
 	)
 	mgr.army_selected.connect(func(a: ArmyData) -> void:
-		selected_army_id[0] = a.army_id
+		selected_army[0] = a
 	)
 	mgr.selection_cleared.connect(func() -> void:
-		selected_prov_id[0] = ""
-		selected_army_id[0] = ""
+		selected_prov[0] = null
+		selected_army[0] = null
 	)
 	
 	# Tap on spartan army at (100, 100) -> Army has priority
 	mgr.handle_world_tap(Vector2(100, 100))
-	_assert(selected_army_id[0] == "spartan_army", "First tap on (100, 100) should select spartan_army", failures)
+	_assert(selected_army[0] != null and selected_army[0].army_id == "spartan_army", 
+		"First tap on (100, 100) should select spartan_army and emit army_selected", failures)
 	
 	# Tap-again cycling: tapping on selected army again switches selection to underlying province
 	mgr.handle_world_tap(Vector2(100, 100))
-	_assert(selected_prov_id[0] == "prov_sparta", "Second tap on selected army should cycle to prov_sparta", failures)
+	_assert(selected_prov[0] != null and selected_prov[0].province_id == "prov_sparta", 
+		"Second tap on selected army should cycle to prov_sparta and emit province_selected", failures)
 	
 	# Tap outside on empty void (5000, 5000) clears selection
 	mgr.handle_world_tap(Vector2(5000, 5000))
-	_assert(selected_prov_id[0] == "" and selected_army_id[0] == "", "Tapping void should clear selection", failures)
+	_assert(selected_prov[0] == null and selected_army[0] == null, 
+		"Tapping void should clear selection and emit selection_cleared", failures)
 	
 	mgr.free()
 

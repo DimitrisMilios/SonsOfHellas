@@ -157,30 +157,36 @@ func handle_world_tap(tap_world_pos: Vector2) -> void:
 
 ## Validates whether an army can legally move to target province.
 func validate_army_move(army: ArmyData, target_province_id: String) -> Dictionary:
+	if is_inside_tree():
+		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+		if turn_mgr != null and turn_mgr.has_method("can_accept_command"):
+			if not turn_mgr.can_accept_command():
+				return {"valid": false, "cost": 0.0, "triggers_engagement": false, "reason": "Cannot move while turn is processing."}
+
 	if army == null:
-		return {"valid": false, "cost": 0.0, "reason": "No army selected."}
+		return {"valid": false, "cost": 0.0, "triggers_engagement": false, "reason": "No army selected."}
 	
 	if not provinces.has(target_province_id):
-		return {"valid": false, "cost": 0.0, "reason": "Target province does not exist."}
+		return {"valid": false, "cost": 0.0, "triggers_engagement": false, "reason": "Target province does not exist."}
 	
 	var current_province: ProvinceData = provinces.get(army.current_province_id, null)
 	if current_province == null:
-		return {"valid": false, "cost": 0.0, "reason": "Army is not currently stationed in a valid province."}
+		return {"valid": false, "cost": 0.0, "triggers_engagement": false, "reason": "Army is not currently stationed in a valid province."}
 	
 	if current_province.province_id == target_province_id:
-		return {"valid": false, "cost": 0.0, "reason": "Army is already in this province."}
+		return {"valid": false, "cost": 0.0, "triggers_engagement": false, "reason": "Army is already in this province."}
 	
-	if not current_province.is_adjacent_to(target_province_id):
-		return {"valid": false, "cost": 0.0, "reason": "Target province is not adjacent."}
+	var target_province: ProvinceData = provinces[target_province_id]
+	var mov_res: Dictionary = MovementEngine.calculate_movement_result(
+		army, current_province, target_province, "plains", 0, armies
+	)
 	
-	var ap_cost: float = ArmyData.BASE_MOVEMENT_AP_COST
-	if army.stance == ArmyData.Stance.FORCED_MARCH:
-		ap_cost *= 0.8
-	
-	if army.current_action_points < ap_cost:
-		return {"valid": false, "cost": ap_cost, "reason": "Insufficient Action Points (Requires %.0f, has %.0f)." % [ap_cost, army.current_action_points]}
-	
-	return {"valid": true, "cost": ap_cost, "reason": "Move valid."}
+	return {
+		"valid": mov_res.get("success", false),
+		"cost": mov_res.get("ap_cost", 0.0),
+		"triggers_engagement": mov_res.get("triggers_engagement", false),
+		"reason": mov_res.get("reason", "OK")
+	}
 
 ## Executes movement, consumes AP, and resolves encounters according to AutoResolveEngine.
 func execute_army_move(army: ArmyData, target_province_id: String) -> bool:
@@ -192,9 +198,14 @@ func execute_army_move(army: ArmyData, target_province_id: String) -> bool:
 	var from_province_id: String = army.current_province_id
 	var ap_cost: float = validation["cost"]
 	var target_province: ProvinceData = provinces[target_province_id]
+	var triggers_engagement: bool = validation.get("triggers_engagement", false)
 
-	# Consume Action Points
+	# Consume Action Points and handle ZoC interception
 	army.consume_action_points(ap_cost)
+	if triggers_engagement:
+		# Entering hostile Zone of Control halts further movement and expends all remaining AP
+		army.current_action_points = 0.0
+
 	army_movement_started.emit(army, from_province_id, target_province_id)
 
 	# Check for opposing hostile forces in destination
