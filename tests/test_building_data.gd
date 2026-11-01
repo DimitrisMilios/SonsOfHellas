@@ -7,6 +7,7 @@ static func run_all_tests() -> Array[String]:
 	_test_building_unlock_requirements(failures)
 	_test_building_slot_construction_lifecycle(failures)
 	_test_building_serialization_round_trip(failures)
+	_test_garrison_roster_extraction(failures)
 	return failures
 
 static func _test_building_defaults(failures: Array[String]) -> void:
@@ -96,3 +97,26 @@ static func _test_building_serialization_round_trip(failures: Array[String]) -> 
 		failures.append("Restored PWG mismatch")
 	if restored.food_production_delta != bld.food_production_delta:
 		failures.append("Restored food_production_delta mismatch")
+
+static func _test_garrison_roster_extraction(failures: Array[String]) -> void:
+	var bld: BuildingData = BuildingData.new()
+	bld.building_id = "bld_citadel"
+	bld.add_garrison_grant("unit_hoplite_militia", 2)
+	bld.add_garrison_grant("unit_archer_levy", 1)
+	
+	var grants: Array[Dictionary] = bld.get_granted_garrisons()
+	if grants.size() != 2:
+		failures.append("Expected 2 garrison grants, got: " + str(grants.size()))
+		return
+	if grants[0]["unit_card_id"] != "unit_hoplite_militia" or grants[0]["quantity"] != 2:
+		failures.append("First garrison grant mismatch")
+	if grants[1]["unit_card_id"] != "unit_archer_levy" or grants[1]["quantity"] != 1:
+		failures.append("Second garrison grant mismatch")
+		
+	var dict: Dictionary = bld.to_dict()
+	var restored: BuildingData = BuildingData.from_dict(dict)
+	var restored_grants: Array[Dictionary] = restored.get_granted_garrisons()
+	if restored_grants.size() != 2:
+		failures.append("Restored grants size mismatch")
+	elif restored_grants[0]["unit_card_id"] != "unit_hoplite_militia" or restored_grants[0]["quantity"] != 2:
+		failures.append("Restored first grant mismatch")

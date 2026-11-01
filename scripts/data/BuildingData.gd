@@ -70,6 +70,17 @@ func is_unlocked(available_resources: Array[String], current_settlement_level: i
 func get_net_food_delta() -> int:
 	return food_production_delta
 
+## Adds an automatic garrison unit granted while this building is standing.
+func add_garrison_grant(unit_card_id: String, quantity: int = 1) -> void:
+	garrison_units_granted.append({
+		"unit_card_id": unit_card_id,
+		"quantity": quantity
+	})
+
+## Returns the list of garrison units granted by this building.
+func get_granted_garrisons() -> Array[Dictionary]:
+	return garrison_units_granted
+
 ## Creates an isolated clone of this building definition.
 func clone() -> BuildingData:
 	var copy: BuildingData = BuildingData.new()
@@ -120,7 +131,8 @@ func to_dict() -> Dictionary:
 			"required_resource_type": required_resource_type,
 			"required_settlement_level": required_settlement_level,
 			"mutually_exclusive_branch_id": mutually_exclusive_branch_id if mutually_exclusive_branch_id != "" else null
-		}
+		},
+		"garrison_units_granted": garrison_units_granted.duplicate(true)
 	}
 
 ## Deserializes dictionary to BuildingData instance.
@@ -151,6 +163,15 @@ static func from_dict(dict: Dictionary) -> BuildingData:
 		bld.required_settlement_level = int(reqs.get("required_settlement_level", 1))
 		bld.mutually_exclusive_branch_id = str(reqs.get("mutually_exclusive_branch_id", "")) if reqs.get("mutually_exclusive_branch_id") != null else ""
 		
+	var garrisons: Array = dict.get("garrison_units_granted", [])
+	bld.garrison_units_granted.clear()
+	for g: Variant in garrisons:
+		if g is Dictionary:
+			bld.garrison_units_granted.append({
+				"unit_card_id": str(g.get("unit_card_id", "")),
+				"quantity": int(g.get("quantity", 1))
+			})
+			
 	return bld
 
 static func branch_type_to_string(branch: BranchType) -> String:
