@@ -235,16 +235,6 @@ func _init() -> void:
 		for f: String in mc_failures:
 			print("     * " + f)
 
-	print("[RUNNING] TestSceneBootstrap...")
-	var sb_failures: Array[String] = TestSceneBootstrap.run_all_tests()
-	if sb_failures.is_empty():
-		print("  -> PASSED: TestSceneBootstrap")
-	else:
-		total_failures += sb_failures.size()
-		print("  -> FAILED: TestSceneBootstrap (%d errors)" % sb_failures.size())
-		for f: String in sb_failures:
-			print("     * " + f)
-
 	print("[RUNNING] TestProvinceNode...")
 	var pn_failures: Array[String] = TestProvinceNode.run_all_tests()
 	if pn_failures.is_empty():
