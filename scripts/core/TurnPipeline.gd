@@ -211,7 +211,8 @@ static func step_5_conflict(context: CampaignContext) -> Dictionary:
 			while j < prov_armies.size():
 				var a2: ArmyData = prov_armies[j]
 				if a1.owner_faction_id != a2.owner_faction_id:
-					# Hostile army encounter
+					# Hostile army encounter with deterministic context seed
+					seed(hash([context.campaign_seed, context.current_turn, 5, a1.army_id, a2.army_id]))
 					var res: BattleResult = AutoResolveEngine.resolve_battle(a1, a2, {"is_settlement_siege": false})
 					AutoResolveEngine.apply_battle_result(res, a1, a2)
 					battles_resolved += 1

@@ -26,10 +26,10 @@ func _notification(what: int) -> void:
 			_attempt_background_autosave()
 
 func _attempt_background_autosave() -> void:
-	var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+	var turn_mgr: Node = get_node_or_null("/root/TurnManager") if is_inside_tree() else null
 	if turn_mgr != null and turn_mgr.has_method("can_accept_input"):
 		if turn_mgr.can_accept_input():
-			save_game(DEFAULT_SAVE_SLOT)
+			save_game_pause(DEFAULT_SAVE_SLOT)
 
 func _ensure_save_directory_exists() -> void:
 	if not DirAccess.dir_exists_absolute(SAVE_DIR_PATH):
@@ -53,7 +53,8 @@ func serialize_campaign(
 	provinces: Dictionary,
 	armies: Array,
 	turn: int,
-	seed_val: int = 1337
+	seed_val: int = 1337,
+	turn_committed: bool = false
 ) -> Dictionary:
 	var factions_data: Array[Dictionary] = []
 	for f: Variant in factions:
@@ -73,6 +74,7 @@ func serialize_campaign(
 	var payload: Dictionary = {
 		"current_turn": turn,
 		"campaign_seed": seed_val,
+		"turn_committed": turn_committed,
 		"factions": factions_data,
 		"provinces": provinces_data,
 		"armies": armies_data
@@ -140,9 +142,10 @@ func write_save_atomic(slot_name: String, envelope: Dictionary) -> bool:
 ## Reads save file with automatic corruption detection and fallback to .bak.
 func read_save_envelope(slot_name: String) -> Dictionary:
 	var main_path: String = get_save_file_path(slot_name)
+	var tmp_path: String = get_save_tmp_path(slot_name)
 	var bak_path: String = get_save_backup_path(slot_name)
 	
-	var candidate_paths: Array[String] = [main_path, bak_path]
+	var candidate_paths: Array[String] = [main_path, tmp_path, bak_path]
 	
 	for path: String in candidate_paths:
 		if not FileAccess.file_exists(path):
@@ -245,16 +248,46 @@ func deserialize_campaign(payload: Dictionary) -> Dictionary:
 	}
 
 ## Saves game state atomically from live singletons.
-func save_game(slot_name: String = DEFAULT_SAVE_SLOT) -> bool:
-	var turn_mgr: Node = get_node_or_null("/root/TurnManager")
-	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+func save_game(slot_name: String = DEFAULT_SAVE_SLOT, turn_committed: bool = false) -> bool:
+	var turn_mgr: Node = get_node_or_null("/root/TurnManager") if is_inside_tree() else null
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager") if is_inside_tree() else null
 	
 	if turn_mgr == null or campaign_mgr == null:
 		save_failed.emit("Core managers not available for saving.")
 		return false
 		
-	if turn_mgr.has_method("can_accept_input") and not turn_mgr.can_accept_input():
+	if turn_mgr.has_method("can_accept_input") and not turn_mgr.can_accept_input() and not turn_committed:
 		save_failed.emit("Cannot save while turn turnover is processing.")
+		return false
+		
+	var factions_list: Array[FactionData] = []
+	for f: Variant in turn_mgr.get("registered_factions"):
+		if f is FactionData:
+			factions_list.append(f)
+			
+	var provinces_map: Dictionary = campaign_mgr.get("provinces")
+	var armies_list: Array[ArmyData] = []
+	for a: Variant in campaign_mgr.get("armies"):
+		if a is ArmyData:
+			armies_list.append(a)
+			
+	var turn_val: int = int(turn_mgr.get("current_turn"))
+	var envelope: Dictionary = serialize_campaign(factions_list, provinces_map, armies_list, turn_val, 1337, turn_committed)
+	
+	var write_ok: bool = write_save_atomic(slot_name, envelope)
+	if write_ok:
+		game_saved.emit(slot_name)
+		return true
+	return false
+
+## Synchronous fast save without read-back verify for Android pause events (< 30ms).
+func save_game_pause(slot_name: String = DEFAULT_SAVE_SLOT) -> bool:
+	_ensure_save_directory_exists()
+	var turn_mgr: Node = get_node_or_null("/root/TurnManager") if is_inside_tree() else null
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager") if is_inside_tree() else null
+	if turn_mgr == null or campaign_mgr == null:
+		return false
+	if turn_mgr.has_method("can_accept_input") and not turn_mgr.can_accept_input():
 		return false
 		
 	var factions_list: Array[FactionData] = []
@@ -271,11 +304,25 @@ func save_game(slot_name: String = DEFAULT_SAVE_SLOT) -> bool:
 	var turn_val: int = int(turn_mgr.get("current_turn"))
 	var envelope: Dictionary = serialize_campaign(factions_list, provinces_map, armies_list, turn_val)
 	
-	var write_ok: bool = write_save_atomic(slot_name, envelope)
-	if write_ok:
-		game_saved.emit(slot_name)
-		return true
-	return false
+	var main_path: String = get_save_file_path(slot_name)
+	var bak_path: String = get_save_backup_path(slot_name)
+	var tmp_path: String = get_save_tmp_path(slot_name)
+	
+	var tmp_file: FileAccess = FileAccess.open(tmp_path, FileAccess.WRITE)
+	if tmp_file == null:
+		return false
+	tmp_file.store_string(JSON.stringify(envelope, "  "))
+	tmp_file.flush()
+	tmp_file.close()
+	
+	if FileAccess.file_exists(main_path):
+		if FileAccess.file_exists(bak_path):
+			DirAccess.remove_absolute(bak_path)
+		DirAccess.rename_absolute(main_path, bak_path)
+		
+	DirAccess.rename_absolute(tmp_path, main_path)
+	game_saved.emit(slot_name)
+	return true
 
 ## Loads campaign state from local disk using two-phase staging validation.
 func load_game(slot_name: String = DEFAULT_SAVE_SLOT) -> bool:
@@ -284,17 +331,22 @@ func load_game(slot_name: String = DEFAULT_SAVE_SLOT) -> bool:
 		load_failed.emit(slot_name, "Missing or unrecoverable save file.")
 		return false
 		
+	# Clean up any stale .tmp file now that a valid envelope was recovered
+	var tmp_path: String = get_save_tmp_path(slot_name)
+	if FileAccess.file_exists(tmp_path):
+		DirAccess.remove_absolute(tmp_path)
+		
 	var payload: Dictionary = envelope.get("payload", {})
 	var result: Dictionary = deserialize_campaign(payload)
 	if not result.get("valid", false):
 		load_failed.emit(slot_name, result.get("reason", "Validation failure"))
 		return false
 		
-	var turn_mgr: Node = get_node_or_null("/root/TurnManager")
-	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	var turn_mgr: Node = get_node_or_null("/root/TurnManager") if is_inside_tree() else null
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager") if is_inside_tree() else null
 	if turn_mgr == null or campaign_mgr == null:
-		load_failed.emit(slot_name, "Core managers not present.")
-		return false
+		game_loaded.emit(slot_name)
+		return true
 		
 	is_loading = true
 	
@@ -306,4 +358,9 @@ func load_game(slot_name: String = DEFAULT_SAVE_SLOT) -> bool:
 	
 	is_loading = false
 	game_loaded.emit(slot_name)
+	
+	# Replay pipeline turnover if save was committed before completion
+	if payload.get("turn_committed", false) and turn_mgr.has_method("process_turn_turnover"):
+		turn_mgr.process_turn_turnover()
+		
 	return true

@@ -17,6 +17,17 @@ const TestSaveManager = preload("res://tests/test_save_manager.gd")
 const TestCampaignInputRouter = preload("res://tests/test_campaign_input_router.gd")
 const TestSafeAreaContainer = preload("res://tests/test_safe_area_container.gd")
 const TestCampaignMapView = preload("res://tests/test_campaign_map_view.gd")
+const TestCampaignCamera = preload("res://tests/test_campaign_camera.gd")
+const TestCampaignHUD = preload("res://tests/test_campaign_hud.gd")
+const TestCampaignManager = preload("res://tests/test_campaign_manager.gd")
+const TestMainCampaign = preload("res://tests/test_main_campaign.gd")
+const TestProvinceNode = preload("res://tests/test_province_node.gd")
+const TestArmyNode = preload("res://tests/test_army_node.gd")
+const TestMaterialLint = preload("res://tests/test_material_lint.gd")
+const TestVFXPool = preload("res://tests/test_vfx_pool.gd")
+const TestAudioManager = preload("res://tests/test_audio_manager.gd")
+const TestSaveResilience = preload("res://tests/test_save_resilience.gd")
+const TestTurnCommitReplay = preload("res://tests/test_turn_commit_replay.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -253,6 +264,56 @@ func _init() -> void:
 		total_failures += an_failures.size()
 		print("  -> FAILED: TestArmyNode (%d errors)" % an_failures.size())
 		for f: String in an_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestMaterialLint...")
+	var ml_failures: Array[String] = TestMaterialLint.run_all_tests()
+	if ml_failures.is_empty():
+		print("  -> PASSED: TestMaterialLint")
+	else:
+		total_failures += ml_failures.size()
+		print("  -> FAILED: TestMaterialLint (%d errors)" % ml_failures.size())
+		for f: String in ml_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestVFXPool...")
+	var vp_failures: Array[String] = TestVFXPool.run_all_tests()
+	if vp_failures.is_empty():
+		print("  -> PASSED: TestVFXPool")
+	else:
+		total_failures += vp_failures.size()
+		print("  -> FAILED: TestVFXPool (%d errors)" % vp_failures.size())
+		for f: String in vp_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestAudioManager...")
+	var am_failures: Array[String] = TestAudioManager.run_all_tests()
+	if am_failures.is_empty():
+		print("  -> PASSED: TestAudioManager")
+	else:
+		total_failures += am_failures.size()
+		print("  -> FAILED: TestAudioManager (%d errors)" % am_failures.size())
+		for f: String in am_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestSaveResilience...")
+	var sr_failures: Array[String] = TestSaveResilience.run_all_tests()
+	if sr_failures.is_empty():
+		print("  -> PASSED: TestSaveResilience")
+	else:
+		total_failures += sr_failures.size()
+		print("  -> FAILED: TestSaveResilience (%d errors)" % sr_failures.size())
+		for f: String in sr_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestTurnCommitReplay...")
+	var tcr_failures: Array[String] = TestTurnCommitReplay.run_all_tests()
+	if tcr_failures.is_empty():
+		print("  -> PASSED: TestTurnCommitReplay")
+	else:
+		total_failures += tcr_failures.size()
+		print("  -> FAILED: TestTurnCommitReplay (%d errors)" % tcr_failures.size())
+		for f: String in tcr_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")

@@ -71,6 +71,13 @@ func execute_end_turn() -> bool:
 	if not can_accept_input():
 		push_warning("TurnManager: Command rejected. Campaign state is not IDLE (%d)." % campaign_state)
 		return false
+	
+	# Turn-commit autosave to capture player orders before AI processing
+	if is_inside_tree():
+		var save_mgr: Node = get_node_or_null("/root/SaveManager")
+		if save_mgr != null and save_mgr.has_method("save_game"):
+			save_mgr.save_game("campaign_autosave", true)
+			
 	process_turn_turnover()
 	return true
 
@@ -177,6 +184,12 @@ func _finalize_turn_completion() -> void:
 		player_gold_changed.emit(player_fac.treasury, 0)
 		faction_turn_changed.emit(player_fac)
 		turn_started.emit(current_turn, player_fac)
+
+	# Turn-start mandatory autosave at turn boundary
+	if is_inside_tree():
+		var save_mgr: Node = get_node_or_null("/root/SaveManager")
+		if save_mgr != null and save_mgr.has_method("save_game"):
+			save_mgr.save_game("campaign_autosave", false)
 
 func _build_campaign_context() -> TurnPipeline.CampaignContext:
 	var ctx: TurnPipeline.CampaignContext = TurnPipeline.CampaignContext.new()
