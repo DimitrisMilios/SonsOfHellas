@@ -12,6 +12,7 @@ const TestAutoResolveEngine = preload("res://tests/test_autoresolve_engine.gd")
 const TestMovementEngine = preload("res://tests/test_movement_engine.gd")
 const TestTurnPipeline = preload("res://tests/test_turn_pipeline.gd")
 const TestCampaignAI = preload("res://tests/test_campaign_ai.gd")
+const TestTurnManager = preload("res://tests/test_turn_manager.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -138,6 +139,16 @@ func _init() -> void:
 		total_failures += ai_failures.size()
 		print("  -> FAILED: TestCampaignAI (%d errors)" % ai_failures.size())
 		for f: String in ai_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestTurnManager...")
+	var tm_failures: Array[String] = TestTurnManager.run_all_tests()
+	if tm_failures.is_empty():
+		print("  -> PASSED: TestTurnManager")
+	else:
+		total_failures += tm_failures.size()
+		print("  -> FAILED: TestTurnManager (%d errors)" % tm_failures.size())
+		for f: String in tm_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")
