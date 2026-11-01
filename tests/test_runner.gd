@@ -16,6 +16,7 @@ const TestTurnManager = preload("res://tests/test_turn_manager.gd")
 const TestSaveManager = preload("res://tests/test_save_manager.gd")
 const TestCampaignInputRouter = preload("res://tests/test_campaign_input_router.gd")
 const TestSafeAreaContainer = preload("res://tests/test_safe_area_container.gd")
+const TestCampaignMapView = preload("res://tests/test_campaign_map_view.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -182,6 +183,16 @@ func _init() -> void:
 		total_failures += sa_failures.size()
 		print("  -> FAILED: TestSafeAreaContainer (%d errors)" % sa_failures.size())
 		for f: String in sa_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestCampaignMapView...")
+	var mv_failures: Array[String] = TestCampaignMapView.run_all_tests()
+	if mv_failures.is_empty():
+		print("  -> PASSED: TestCampaignMapView")
+	else:
+		total_failures += mv_failures.size()
+		print("  -> FAILED: TestCampaignMapView (%d errors)" % mv_failures.size())
+		for f: String in mv_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")
