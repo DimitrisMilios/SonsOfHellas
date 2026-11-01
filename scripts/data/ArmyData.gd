@@ -126,6 +126,10 @@ func add_unit(unit: UnitData) -> void:
 	if unit != null:
 		units.append(unit)
 
+func remove_unit(unit: UnitData) -> void:
+	if unit != null:
+		units.erase(unit)
+
 func remove_unit_at(index: int) -> void:
 	if index >= 0 and index < units.size():
 		units.remove_at(index)

@@ -10,6 +10,7 @@ const TestEconomyCalculator = preload("res://tests/test_economy_calculator.gd")
 const TestBattleResult = preload("res://tests/test_battle_result.gd")
 const TestAutoResolveEngine = preload("res://tests/test_autoresolve_engine.gd")
 const TestMovementEngine = preload("res://tests/test_movement_engine.gd")
+const TestTurnPipeline = preload("res://tests/test_turn_pipeline.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -116,6 +117,16 @@ func _init() -> void:
 		total_failures += mov_failures.size()
 		print("  -> FAILED: TestMovementEngine (%d errors)" % mov_failures.size())
 		for f: String in mov_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestTurnPipeline...")
+	var pipeline_failures: Array[String] = TestTurnPipeline.run_all_tests()
+	if pipeline_failures.is_empty():
+		print("  -> PASSED: TestTurnPipeline")
+	else:
+		total_failures += pipeline_failures.size()
+		print("  -> FAILED: TestTurnPipeline (%d errors)" % pipeline_failures.size())
+		for f: String in pipeline_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")
