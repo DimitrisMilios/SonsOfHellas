@@ -34,7 +34,7 @@ theme_override_constants/margin_bottom = 4
 
 [node name="HBoxContainer" type="HBoxContainer" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 16
 
 [node name="GameTitle" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
@@ -43,22 +43,32 @@ text = "SONS OF HELLAS"
 
 [node name="TurnLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "Turn 1"
+
+[node name="SeasonLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Spring, 431 BC"
 
 [node name="FactionLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "Active: Sparta (Player)"
+theme_override_font_sizes/font_size = 15
+text = "Active: Sparta"
 
 [node name="TreasuryLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "Treasury: 1500 Gold"
+
+[node name="IncomeLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Net: +300/turn"
 
 [node name="FoodLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 text = "Food: +5"
 
 [node name="Spacer" type="Control" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]

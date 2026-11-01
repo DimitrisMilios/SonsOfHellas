@@ -4,8 +4,10 @@ extends CanvasLayer
 @onready var safe_area_container: SafeAreaContainer = $SafeAreaContainer
 @onready var top_bar: PanelContainer = $SafeAreaContainer/HUDLayout/TopBar
 @onready var turn_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/TurnLabel
+@onready var season_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/SeasonLabel
 @onready var faction_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/FactionLabel
 @onready var treasury_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/TreasuryLabel
+@onready var income_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/IncomeLabel
 @onready var food_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/FoodLabel
 @onready var end_turn_button: Button = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/EndTurnButton
 
@@ -20,6 +22,15 @@ extends CanvasLayer
 
 var _current_selected_army_id: String = ""
 
+## Calculates historical season and year string given campaign turn number.
+static func format_season_year(turn_num: int) -> String:
+	var safe_turn: int = maxi(1, turn_num)
+	var seasons: Array[String] = ["Spring", "Summer", "Autumn", "Winter"]
+	var season_idx: int = (safe_turn - 1) % 4
+	var years_passed: int = (safe_turn - 1) / 4
+	var year: int = 431 - years_passed
+	return "%s, %d BC" % [seasons[season_idx], year]
+
 func _ensure_references() -> void:
 	if safe_area_container == null:
 		safe_area_container = get_node_or_null("SafeAreaContainer") as SafeAreaContainer
@@ -27,10 +38,14 @@ func _ensure_references() -> void:
 		top_bar = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar") as PanelContainer
 	if turn_label == null:
 		turn_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/TurnLabel") as Label
+	if season_label == null:
+		season_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/SeasonLabel") as Label
 	if faction_label == null:
 		faction_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/FactionLabel") as Label
 	if treasury_label == null:
 		treasury_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/TreasuryLabel") as Label
+	if income_label == null:
+		income_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/IncomeLabel") as Label
 	if food_label == null:
 		food_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/FoodLabel") as Label
 	if end_turn_button == null:
@@ -89,7 +104,7 @@ func _ready() -> void:
 			if turn_mgr.has_signal("turn_processing_finished"):
 				turn_mgr.turn_processing_finished.connect(on_turn_processing_finished)
 
-			_refresh_top_bar(
+			update_top_bar(
 				turn_mgr.current_turn if "current_turn" in turn_mgr else 1,
 				turn_mgr.get_active_faction() if turn_mgr.has_method("get_active_faction") else null,
 				turn_mgr.get_player_gold() if turn_mgr.has_method("get_player_gold") else 0
@@ -116,6 +131,23 @@ func _ready() -> void:
 				show_notification("Campaign Autosaved (Offline)", 1.2)
 			)
 
+## Updates all metrics in the top HUD bar.
+func update_top_bar(turn_num: int, active_faction: FactionData, gold: int, net_income: int = 0) -> void:
+	_ensure_references()
+	if turn_label != null:
+		turn_label.text = "Turn %d" % turn_num
+	if season_label != null:
+		season_label.text = format_season_year(turn_num)
+	if faction_label != null and active_faction != null:
+		var side_str: String = "Player" if active_faction.is_player else "AI"
+		faction_label.text = "Active: %s (%s)" % [active_faction.faction_name, side_str]
+	if treasury_label != null:
+		treasury_label.text = "Treasury: %d Gold" % gold
+	if income_label != null:
+		income_label.text = "Net: %+d/turn" % net_income
+	if food_label != null and active_faction != null:
+		food_label.text = "Food: %+d" % active_faction.food_balance
+
 ## Binds an immutable ProvinceViewModel snapshot directly to the inspection drawer.
 func display_province_view_model(vm: ProvinceViewModel) -> void:
 	_ensure_references()
@@ -129,28 +161,36 @@ func display_province_view_model(vm: ProvinceViewModel) -> void:
 		title_label.text = "Province: %s" % vm.province_name
 
 	if details_label != null:
-		var buildings_str: String = "None"
+		var buildings_list: Array[String] = []
 		if not vm.building_slots_summary.is_empty():
-			var names: Array[String] = []
 			for slot_dict: Dictionary in vm.building_slots_summary:
-				names.append(slot_dict.get("name", "Slot"))
-			buildings_str = ", ".join(names)
+				var b_name: String = slot_dict.get("name", "Slot")
+				var is_bld: bool = slot_dict.get("is_building", false)
+				var turns: int = slot_dict.get("turns_left", 0)
+				if is_bld:
+					buildings_list.append("%s (Building, %d turns)" % [b_name, turns])
+				else:
+					buildings_list.append(b_name)
+		var buildings_str: String = ", ".join(buildings_list) if not buildings_list.is_empty() else "None"
 
 		details_label.text = """Owner: %s
 Settlement Tier: %d
 Public Order: %.1f
-Region Wealth: %.0f Gold
-Tax Yield: %d Gold (Upper %d / Lower %d)
 Unrest Pressure: %d
-Buildings: %s""" % [
+Consecutive Unrest Turns: %d
+Region Wealth: %.0f Gold
+Tax Yield: %d Gold (Upper L%d / Lower L%d)
+Building Slots (%d): %s""" % [
 			vm.owner_faction_id.capitalize(),
 			vm.settlement_tier,
 			vm.public_order,
+			vm.unrest_pressure,
+			vm.consecutive_unrest_turns,
 			vm.region_wealth,
 			vm.tax_income,
 			vm.tax_level_upper,
 			vm.tax_level_lower,
-			vm.unrest_pressure,
+			vm.building_slots_summary.size(),
 			buildings_str
 		]
 
@@ -212,21 +252,6 @@ func on_turn_processing_finished() -> void:
 	if end_turn_button != null:
 		end_turn_button.disabled = false
 
-func _refresh_top_bar(turn_num: int, active_faction: FactionData, gold: int) -> void:
-	_ensure_references()
-	if turn_label != null:
-		turn_label.text = "Turn %d" % turn_num
-	
-	if faction_label != null and active_faction != null:
-		var side_str: String = "Player" if active_faction.is_player else "AI"
-		faction_label.text = "Active: %s (%s)" % [active_faction.faction_name, side_str]
-	
-	if treasury_label != null:
-		treasury_label.text = "Treasury: %d Gold" % gold
-
-	if food_label != null and active_faction != null:
-		food_label.text = "Food: %+d" % active_faction.food_balance
-
 func _on_end_turn_pressed() -> void:
 	if is_inside_tree():
 		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
@@ -237,14 +262,14 @@ func _on_turn_started(turn_number: int, active_faction: FactionData) -> void:
 	if is_inside_tree():
 		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
 		var gold: int = turn_mgr.get_player_gold() if (turn_mgr != null and turn_mgr.has_method("get_player_gold")) else 0
-		_refresh_top_bar(turn_number, active_faction, gold)
+		update_top_bar(turn_number, active_faction, gold)
 
 func _on_faction_turn_changed(active_faction: FactionData) -> void:
 	if is_inside_tree():
 		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
 		var gold: int = turn_mgr.get_player_gold() if (turn_mgr != null and turn_mgr.has_method("get_player_gold")) else 0
 		var current_turn: int = turn_mgr.current_turn if (turn_mgr != null and "current_turn" in turn_mgr) else 1
-		_refresh_top_bar(current_turn, active_faction, gold)
+		update_top_bar(current_turn, active_faction, gold)
 
 func _on_player_gold_changed(new_gold: int, _delta: int) -> void:
 	_ensure_references()
@@ -274,7 +299,8 @@ func _on_battle_triggered(result: BattleResult) -> void:
 	if battle_dialog != null and result != null:
 		battle_dialog.title = "Battle Resolved - %s" % ("Victory!" if result.attacker_won else "Defeat!")
 		battle_dialog.dialog_text = result.get_log_message()
-		battle_dialog.popup_centered(Vector2i(540, 320))
+		if battle_dialog.is_inside_tree():
+			battle_dialog.popup_centered(Vector2i(540, 320))
 	clear_selection()
 
 func show_notification(msg: String, duration: float = 2.0) -> void:
