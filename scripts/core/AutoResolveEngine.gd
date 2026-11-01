@@ -181,6 +181,15 @@ static func calculate_unit_casualty_rate(unit: UnitData, army_loss_ratio: float,
 	var armor_modifier: float = pow(safe_avg_armor / safe_armor, 0.3)
 	return clampf(army_loss_ratio * w_risk * armor_modifier, 0.0, 1.0)
 
+## Resolves battle between attacker and defender, returning an exhaustive BattleResult value object.
+static func resolve_battle(
+	attacker: ArmyData,
+	defender: ArmyData,
+	context: Dictionary = {},
+	forced_roll: float = -1.0
+) -> BattleResult:
+	return simulate_battle(attacker, defender, context, forced_roll)
+
 ## Simulates battle without mutating input armies. Returns an exhaustive BattleResult value object.
 static func simulate_battle(
 	attacker: ArmyData,

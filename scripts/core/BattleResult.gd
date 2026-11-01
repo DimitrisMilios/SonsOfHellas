@@ -44,17 +44,28 @@ var battle_summary: String = ""
 func is_decisive() -> bool:
 	return outcome_classification.begins_with("Decisive") or outcome_classification.begins_with("Heroic")
 
-## Formulates structured combat telemetry log for UI dialogs and debugging.
+## Validates conservation of model counts across casualties and survivors.
+func validate_survivor_integrity() -> bool:
+	if attacker_initial_models != (attacker_casualties_count + attacker_remaining_models):
+		return false
+	if defender_initial_models != (defender_casualties_count + defender_remaining_models):
+		return false
+	return true
+
+## Formulates structured combat telemetry log in Markdown for UI dialogs and battle reports.
 func get_log_message() -> String:
 	var victor_side: String = "Attacker" if attacker_won else "Defender"
 	var win_pct_str: String = "%.1f%%" % (attacker_win_probability * 100.0)
-	var wipeout_str: String = " [STACK WIPED OUT]" if is_wipeout else ""
-	return """[Battle Result - %s] Victor: %s%s
-Attacker Win Chance: %s | Power Ratio: %.2f:1
-Attacker Power: %.0f | Defender Power: %.0f
-Attacker Losses: %d / %d models (Units Lost: %d)
-Defender Losses: %d / %d models (Units Lost: %d)
-Summary: %s""" % [
+	var wipeout_str: String = " **[STACK WIPED OUT]**" if is_wipeout else ""
+	return """### Battle Result: %s
+**Victor**: %s%s
+* **Attacker Win Chance**: %s
+* **Power Ratio**: %.2f:1
+* **Attacker Power**: %.0f | **Defender Power**: %.0f
+* **Attacker Losses**: %d / %d models (%d units eliminated)
+* **Defender Losses**: %d / %d models (%d units eliminated)
+
+> %s""" % [
 		outcome_classification,
 		victor_side,
 		wipeout_str,

@@ -7,6 +7,8 @@ static func run_all_tests() -> Array[String]:
 	_test_battle_result_survivor_integrity(failures)
 	_test_battle_result_formatting(failures)
 	_test_decisive_classification_check(failures)
+	_test_validate_survivor_integrity_method(failures)
+	_test_autoresolve_engine_resolve_battle_integration(failures)
 	return failures
 
 static func _test_battle_result_defaults(failures: Array[String]) -> void:
@@ -77,3 +79,42 @@ static func _test_decisive_classification_check(failures: Array[String]) -> void
 	res.outcome_classification = "Pyrrhic Victory"
 	if res.is_decisive():
 		failures.append("Pyrrhic Victory should return false for is_decisive()")
+
+static func _test_validate_survivor_integrity_method(failures: Array[String]) -> void:
+	var res: BattleResult = BattleResult.new()
+	res.attacker_initial_models = 120
+	res.attacker_casualties_count = 40
+	res.attacker_remaining_models = 80
+	res.defender_initial_models = 100
+	res.defender_casualties_count = 50
+	res.defender_remaining_models = 50
+	
+	if not res.validate_survivor_integrity():
+		failures.append("validate_survivor_integrity() returned false when models are conserved")
+		
+	# Corrupt counts
+	res.attacker_remaining_models = 70
+	if res.validate_survivor_integrity():
+		failures.append("validate_survivor_integrity() returned true when models were lost/corrupted")
+
+static func _test_autoresolve_engine_resolve_battle_integration(failures: Array[String]) -> void:
+	var att: ArmyData = ArmyData.new()
+	var att_u: UnitData = UnitData.new()
+	att_u.unit_id = "test_att"
+	att_u.unit_count = 120
+	att.add_unit(att_u)
+	
+	var def: ArmyData = ArmyData.new()
+	var def_u: UnitData = UnitData.new()
+	def_u.unit_id = "test_def"
+	def_u.unit_count = 100
+	def.add_unit(def_u)
+	
+	var res: BattleResult = AutoResolveEngine.resolve_battle(att, def, {}, 0.01)
+	if res == null:
+		failures.append("AutoResolveEngine.resolve_battle() returned null")
+		return
+	if not res.validate_survivor_integrity():
+		failures.append("AutoResolveEngine.resolve_battle() result failed survivor integrity validation")
+	if res.outcome_classification.is_empty():
+		failures.append("AutoResolveEngine.resolve_battle() missing outcome classification")
