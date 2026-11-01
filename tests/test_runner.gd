@@ -225,6 +225,16 @@ func _init() -> void:
 		for f: String in cm_failures:
 			print("     * " + f)
 
+	print("[RUNNING] TestMainCampaign...")
+	var mc_failures: Array[String] = TestMainCampaign.run_all_tests()
+	if mc_failures.is_empty():
+		print("  -> PASSED: TestMainCampaign")
+	else:
+		total_failures += mc_failures.size()
+		print("  -> FAILED: TestMainCampaign (%d errors)" % mc_failures.size())
+		for f: String in mc_failures:
+			print("     * " + f)
+
 	print("[RUNNING] TestSceneBootstrap...")
 	var sb_failures: Array[String] = TestSceneBootstrap.run_all_tests()
 	if sb_failures.is_empty():

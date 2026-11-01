@@ -20,6 +20,7 @@ var _mouse_start_time: int = 0
 var _is_mouse_down: bool = false
 
 func _ready() -> void:
+	_ensure_references()
 	_load_default_presets_if_empty()
 	_initialize_factions()
 	_initialize_campaign_manager()
@@ -35,6 +36,18 @@ func _ready() -> void:
 	var turn_mgr: Node = get_node_or_null("/root/TurnManager")
 	if turn_mgr != null and turn_mgr.has_method("start_campaign"):
 		turn_mgr.start_campaign()
+
+func _ensure_references() -> void:
+	if world_container == null:
+		world_container = get_node_or_null("World") as Node2D
+	if roads_container == null:
+		roads_container = get_node_or_null("World/Roads") as Node2D
+	if map_view == null:
+		map_view = get_node_or_null("World/CampaignMapView") as CampaignMapView
+	if camera == null:
+		camera = get_node_or_null("CampaignCamera") as CampaignCamera
+	if hud == null:
+		hud = get_node_or_null("CampaignHUD") as CampaignHUD
 
 func _load_default_presets_if_empty() -> void:
 	if faction_resources.is_empty():
@@ -70,31 +83,39 @@ func _initialize_campaign_manager() -> void:
 				campaign_mgr.register_army(a)
 
 func _wire_signals() -> void:
+	_ensure_references()
 	if camera != null and map_view != null:
-		camera.zoom_changed.connect(map_view.on_camera_zoom_changed)
+		if not camera.zoom_changed.is_connected(map_view.on_camera_zoom_changed):
+			camera.zoom_changed.connect(map_view.on_camera_zoom_changed)
 		map_view.on_camera_zoom_changed(camera.zoom)
 
-	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
-	if campaign_mgr != null:
-		campaign_mgr.province_selected.connect(_on_province_selected)
-		campaign_mgr.army_selected.connect(_on_army_selected)
-		campaign_mgr.selection_cleared.connect(_on_selection_cleared)
-		campaign_mgr.province_ownership_changed.connect(_on_ownership_changed)
-		campaign_mgr.army_movement_completed.connect(_on_movement_completed)
+	if is_inside_tree():
+		var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+		if campaign_mgr != null:
+			if not campaign_mgr.province_selected.is_connected(_on_province_selected):
+				campaign_mgr.province_selected.connect(_on_province_selected)
+			if not campaign_mgr.army_selected.is_connected(_on_army_selected):
+				campaign_mgr.army_selected.connect(_on_army_selected)
+			if not campaign_mgr.selection_cleared.is_connected(_on_selection_cleared):
+				campaign_mgr.selection_cleared.connect(_on_selection_cleared)
+			if not campaign_mgr.province_ownership_changed.is_connected(_on_ownership_changed):
+				campaign_mgr.province_ownership_changed.connect(_on_ownership_changed)
+			if not campaign_mgr.army_movement_completed.is_connected(_on_movement_completed):
+				campaign_mgr.army_movement_completed.connect(_on_movement_completed)
 
 func _on_province_selected(p: ProvinceData) -> void:
 	if hud != null:
 		var vm: ProvinceViewModel = ProvinceViewModel.from_province_data(p)
 		hud.display_province_view_model(vm)
 	if map_view != null:
-		map_view.select_entity("province", p.province_id)
+		map_view.select_entity(p.province_id, "province")
 
 func _on_army_selected(a: ArmyData) -> void:
 	if hud != null:
 		var vm: ArmyViewModel = ArmyViewModel.from_army_data(a)
 		hud.display_army_view_model(vm)
 	if map_view != null:
-		map_view.select_entity("army", a.army_id)
+		map_view.select_entity(a.army_id, "army")
 
 func _on_selection_cleared() -> void:
 	if hud != null:
