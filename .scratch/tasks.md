@@ -359,11 +359,11 @@ Phase 3 builds the campaign progression state machine and AI decision logic, seq
 
 ---
 
-## Phase 4: Node Layer & Map Integration
+## Phase 4: Node Layer & Map Integration - [COMPLETED & VERIFIED: 100% ROCK SOLID]
 
 Phase 4 integrates the data and math engines into visual Godot nodes, handling touch gestures, safe areas, camera inertia, and HUD displays according to `.agent/rules/mobile_architecture.md`.
 
-### Task 4.1: Campaign World Orchestrator
+### Task 4.1: Campaign World Orchestrator [COMPLETED]
 * **Target File Path**: `res://scripts/core/CampaignManager.gd`
 * **Description**: Central coordinator linking `TurnManager`, `EconomyCalculator`, `AutoResolveEngine`, and `MovementEngine` to visual scene nodes. Handles interactive province selection, path validation, ZoC interception prompts, siege initiation, auto-resolve modal triggers, and province ownership transfers.
 * **Concrete Inputs & Expected Outputs**:
@@ -379,7 +379,7 @@ Phase 4 integrates the data and math engines into visual Godot nodes, handling t
 
 ---
 
-### Task 4.2: Province & Settlement Node Representation
+### Task 4.2: Province & Settlement Node Representation [COMPLETED]
 * **Target File Path**: `res://scripts/world/ProvinceNode.gd` and `res://scenes/ProvinceNode.tscn`
 * **Description**: Visual Node2D representation of provinces. Displays settlement tier visuals (Fort to Citadel), building slot status badges, and public order warning indicators (flashing red alert when $PO < 0$). Touch target CollisionShape2D is enlarged to exceed mobile minimum dimensions ($\ge 44 \times 44$ px).
 * **Concrete Inputs & Expected Outputs**:
@@ -394,7 +394,7 @@ Phase 4 integrates the data and math engines into visual Godot nodes, handling t
 
 ---
 
-### Task 4.3: Army Node, Stance Banners & Movement Boundary
+### Task 4.3: Army Node, Stance Banners & Movement Boundary [COMPLETED]
 * **Target File Path**: `res://scripts/world/ArmyNode.gd` and `res://scenes/ArmyNode.tscn`
 * **Description**: Visual Node2D representation of armies. Renders faction banner, unit count badge, tactical stance icon (Forced March, Raiding, Encamp, Siege), and dynamic movement boundary circle (yellow ring representing reachable AP radius; red zone representing enemy ZoC).
 * **Concrete Inputs & Expected Outputs**:
@@ -408,7 +408,7 @@ Phase 4 integrates the data and math engines into visual Godot nodes, handling t
 
 ---
 
-### Task 4.4: Mobile Touch Camera with Inertia & Pinch-to-Zoom
+### Task 4.4: Mobile Touch Camera with Inertia & Pinch-to-Zoom [COMPLETED]
 * **Target File Path**: `res://scripts/world/CampaignCamera.gd`
 * **Description**: Optimize `CampaignCamera` for mobile devices: single-finger pan with inertia friction, two-finger pinch-to-zoom with smooth damping, boundary clamping within map bounds, and 60 FPS performance under `gl_compatibility`.
 * **Concrete Inputs & Expected Outputs**:
@@ -423,7 +423,7 @@ Phase 4 integrates the data and math engines into visual Godot nodes, handling t
 
 ---
 
-### Task 4.5: Mobile Safe-Area Campaign HUD & Management Panels
+### Task 4.5: Mobile Safe-Area Campaign HUD & Management Panels [COMPLETED]
 * **Target File Path**: `res://scripts/ui/CampaignHUD.gd` and `res://scenes/UI/CampaignHUD.tscn`
 * **Description**: Implement mobile UI adhering to safe areas (`DisplayServer.get_display_safe_area()`).
   * Top Bar: Turn count, season/year, faction treasury, net income delta, global clan food balance ($F_{\text{net}}$), and End Turn button ($\ge 44 \times 44$ px).
@@ -441,7 +441,7 @@ Phase 4 integrates the data and math engines into visual Godot nodes, handling t
 
 ---
 
-### Task 4.6: Main Campaign Scene Wiring & Bootstrap
+### Task 4.6: Main Campaign Scene Wiring & Bootstrap [COMPLETED]
 * **Target File Path**: `res://scripts/core/MainCampaign.gd` and `res://scenes/MainCampaign.tscn`
 * **Description**: Wire all containers, instantiate initial province networks (Sparta, Athens, Corinth, Thebes) and armies with updated Phase 1 `.tres` resources, connect autoload signals, and launch the campaign loop.
 * **Concrete Inputs & Expected Outputs**:
