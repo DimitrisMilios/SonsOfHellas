@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/core/MainCampaign.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/world/CampaignCamera.gd" id="2_camera"]
 [ext_resource type="PackedScene" path="res://scenes/UI/CampaignHUD.tscn" id="3_hud"]
 [ext_resource type="Script" path="res://scripts/world/CampaignMapView.gd" id="4_mapview"]
+[ext_resource type="Texture2D" path="res://assets/map/greece_terrain.png" id="5_terrain"]
 
 [node name="MainCampaign" type="Node2D"]
 script = ExtResource("1_main")
@@ -14,6 +15,11 @@ zoom = Vector2(0.95, 0.95)
 script = ExtResource("2_camera")
 
 [node name="World" type="Node2D" parent="."]
+
+[node name="MapBackground" type="Sprite2D" parent="World"]
+position = Vector2(650, 480)
+scale = Vector2(3.5, 3.5)
+texture = ExtResource("5_terrain")
 
 [node name="Roads" type="Node2D" parent="World"]
 

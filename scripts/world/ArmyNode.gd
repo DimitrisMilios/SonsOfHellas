@@ -5,6 +5,12 @@ const BASE_BOX_SIZE: Vector2 = Vector2(52.0, 52.0)
 const BASE_MOVEMENT_RADIUS: float = 120.0
 const ZOC_RADIUS: float = 64.0
 
+const TEX_HOPLITE: Texture2D = preload("res://assets/map/hoplite_avatar.png")
+const SHIELD_SPARTA: Texture2D = preload("res://assets/ui/sparta_shield.png")
+const SHIELD_ATHENS: Texture2D = preload("res://assets/ui/athens_shield.png")
+const SHIELD_THEBES: Texture2D = preload("res://assets/ui/thebes_shield.png")
+const SHIELD_CORINTH: Texture2D = preload("res://assets/ui/corinth_shield.png")
+
 @export var army_id: String = ""
 @export var army_data: ArmyData = null:
 	set(value):
@@ -94,6 +100,25 @@ func get_faction_color() -> Color:
 		_:
 			return Color(0.40, 0.50, 0.60, 0.85)
 
+func get_faction_shield() -> Texture2D:
+	var fid: String = ""
+	if view_model != null:
+		fid = view_model.owner_faction_id.to_lower()
+	elif army_data != null:
+		fid = army_data.owner_faction_id.to_lower()
+
+	match fid:
+		"sparta":
+			return SHIELD_SPARTA
+		"athens":
+			return SHIELD_ATHENS
+		"thebes":
+			return SHIELD_THEBES
+		"corinth":
+			return SHIELD_CORINTH
+		_:
+			return null
+
 func get_movement_circle_radius() -> float:
 	var cur_ap: float = 0.0
 	var max_ap: float = 100.0
@@ -157,7 +182,7 @@ func _draw() -> void:
 		draw_arc(Vector2.ZERO, get_zoc_radius(), 0.0, TAU, 36, Color(1.0, 0.25, 0.25, 0.55), 2.0)
 	
 	# Army Banner / Shield Box
-	var shield_size: Vector2 = Vector2(40.0, 48.0)
+	var shield_size: Vector2 = Vector2(44.0, 52.0)
 	var rect: Rect2 = Rect2(-shield_size.x / 2.0, -shield_size.y / 2.0, shield_size.x, shield_size.y)
 	var bg_color: Color = get_faction_color()
 	draw_rect(rect, bg_color, true)
@@ -165,6 +190,19 @@ func _draw() -> void:
 	var border_color: Color = Color.GOLD if is_selected else (Color.WHITE if is_hovered else Color.BLACK)
 	var border_width: float = 3.5 if (is_selected or is_hovered) else 2.0
 	draw_rect(rect, border_color, false, border_width)
+
+	# 3D Rendered Hoplite Warrior Figurine Avatar
+	if TEX_HOPLITE != null:
+		var hop_sz: Vector2 = Vector2(40.0, 40.0)
+		var hop_rect: Rect2 = Rect2(-hop_sz.x / 2.0, -hop_sz.y / 2.0 - 4.0, hop_sz.x, hop_sz.y)
+		draw_texture_rect(TEX_HOPLITE, hop_rect, false)
+
+	# Faction Crest Shield
+	var shield_tex: Texture2D = get_faction_shield()
+	if shield_tex != null:
+		var s_sz: Vector2 = Vector2(24.0, 24.0)
+		var s_rect: Rect2 = Rect2(shield_size.x / 2.0 - 14.0, -shield_size.y / 2.0 - 8.0, s_sz.x, s_sz.y)
+		draw_texture_rect(shield_tex, s_rect, false)
 	
 	# Tactical stance indicator ring
 	match stance_type:

@@ -3,6 +3,13 @@ extends Node2D
 
 const BASE_RADIUS: float = 56.0
 
+const TEX_ACROPOLIS: Texture2D = preload("res://assets/map/settlement_acropolis.png")
+const TEX_FORT: Texture2D = preload("res://assets/map/settlement_fort.png")
+const SHIELD_SPARTA: Texture2D = preload("res://assets/ui/sparta_shield.png")
+const SHIELD_ATHENS: Texture2D = preload("res://assets/ui/athens_shield.png")
+const SHIELD_THEBES: Texture2D = preload("res://assets/ui/thebes_shield.png")
+const SHIELD_CORINTH: Texture2D = preload("res://assets/ui/corinth_shield.png")
+
 const TIER_NAMES: Dictionary = {
 	1: "Fort",
 	2: "Town",
@@ -95,6 +102,25 @@ func get_faction_color() -> Color:
 		_:
 			return Color(0.35, 0.45, 0.60, 0.80)
 
+func get_faction_shield() -> Texture2D:
+	var fid: String = ""
+	if view_model != null:
+		fid = view_model.owner_faction_id.to_lower()
+	elif province_data != null:
+		fid = province_data.owner_faction_id.to_lower()
+
+	match fid:
+		"sparta":
+			return SHIELD_SPARTA
+		"athens":
+			return SHIELD_ATHENS
+		"thebes":
+			return SHIELD_THEBES
+		"corinth":
+			return SHIELD_CORINTH
+		_:
+			return null
+
 ## Recomputes touch hit-target radius on camera zoom change.
 func set_zoom(zoom_x: float) -> void:
 	effective_touch_radius = CampaignInputRouter.calculate_effective_world_radius(BASE_RADIUS, zoom_x)
@@ -119,6 +145,20 @@ func _draw() -> void:
 	var border_width: float = 4.0 if (is_selected or is_hovered) else 2.5
 	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 32, border_color, border_width)
 	
+	# Settlement visual icon (Acropolis or Fort)
+	var city_tex: Texture2D = TEX_ACROPOLIS if tier >= 3 else TEX_FORT
+	if city_tex != null:
+		var icon_sz: Vector2 = Vector2(44.0, 44.0)
+		var icon_rect: Rect2 = Rect2(-icon_sz.x / 2.0, -icon_sz.y / 2.0 - 4.0, icon_sz.x, icon_sz.y)
+		draw_texture_rect(city_tex, icon_rect, false)
+
+	# Faction heraldic shield crest (top right of city)
+	var shield_tex: Texture2D = get_faction_shield()
+	if shield_tex != null:
+		var shield_sz: Vector2 = Vector2(28.0, 28.0)
+		var shield_rect: Rect2 = Rect2(radius * 0.45, -radius * 0.85, shield_sz.x, shield_sz.y)
+		draw_texture_rect(shield_tex, shield_rect, false)
+
 	# Unrest warning indicator ring and badge if has_unrest_alert()
 	if has_unrest_alert():
 		var alert_color: Color = Color.RED
