@@ -1,30 +1,62 @@
 class_name CampaignHUD
 extends CanvasLayer
 
-@onready var top_bar: PanelContainer = $TopBar
-@onready var top_margin_container: MarginContainer = $TopBar/MarginContainer
-@onready var turn_label: Label = $TopBar/MarginContainer/HBoxContainer/TurnLabel
-@onready var faction_label: Label = $TopBar/MarginContainer/HBoxContainer/FactionLabel
-@onready var treasury_label: Label = $TopBar/MarginContainer/HBoxContainer/TreasuryLabel
-@onready var end_turn_button: Button = $TopBar/MarginContainer/HBoxContainer/EndTurnButton
+@onready var safe_area_container: SafeAreaContainer = $SafeAreaContainer
+@onready var top_bar: PanelContainer = $SafeAreaContainer/HUDLayout/TopBar
+@onready var turn_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/TurnLabel
+@onready var faction_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/FactionLabel
+@onready var treasury_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/TreasuryLabel
+@onready var food_label: Label = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/FoodLabel
+@onready var end_turn_button: Button = $SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/EndTurnButton
 
-@onready var info_panel: PanelContainer = $SelectionPanel
-@onready var title_label: Label = $SelectionPanel/MarginContainer/VBoxContainer/TitleLabel
-@onready var details_label: Label = $SelectionPanel/MarginContainer/VBoxContainer/DetailsLabel
-@onready var stance_option_button: OptionButton = $SelectionPanel/MarginContainer/VBoxContainer/StanceContainer/StanceOptionButton
-@onready var stance_container: HBoxContainer = $SelectionPanel/MarginContainer/VBoxContainer/StanceContainer
+@onready var info_panel: PanelContainer = $SafeAreaContainer/HUDLayout/SelectionPanel
+@onready var title_label: Label = $SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/TitleLabel
+@onready var details_label: Label = $SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/DetailsLabel
+@onready var stance_container: HBoxContainer = $SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/StanceContainer
+@onready var stance_option_button: OptionButton = $SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/StanceContainer/StanceOptionButton
 
+@onready var notification_label: Label = $SafeAreaContainer/HUDLayout/NotificationLabel
 @onready var battle_dialog: AcceptDialog = $BattleDialog
-@onready var notification_label: Label = $NotificationLabel
 
-var _current_selected_army: ArmyData = null
+var _current_selected_army_id: String = ""
+
+func _ensure_references() -> void:
+	if safe_area_container == null:
+		safe_area_container = get_node_or_null("SafeAreaContainer") as SafeAreaContainer
+	if top_bar == null:
+		top_bar = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar") as PanelContainer
+	if turn_label == null:
+		turn_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/TurnLabel") as Label
+	if faction_label == null:
+		faction_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/FactionLabel") as Label
+	if treasury_label == null:
+		treasury_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/TreasuryLabel") as Label
+	if food_label == null:
+		food_label = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/FoodLabel") as Label
+	if end_turn_button == null:
+		end_turn_button = get_node_or_null("SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer/EndTurnButton") as Button
+	if info_panel == null:
+		info_panel = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel") as PanelContainer
+	if title_label == null:
+		title_label = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/TitleLabel") as Label
+	if details_label == null:
+		details_label = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/DetailsLabel") as Label
+	if stance_container == null:
+		stance_container = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/StanceContainer") as HBoxContainer
+	if stance_option_button == null:
+		stance_option_button = get_node_or_null("SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/StanceContainer/StanceOptionButton") as OptionButton
+	if notification_label == null:
+		notification_label = get_node_or_null("SafeAreaContainer/HUDLayout/NotificationLabel") as Label
+	if battle_dialog == null:
+		battle_dialog = get_node_or_null("BattleDialog") as AcceptDialog
 
 func _ready() -> void:
-	info_panel.visible = false
-	notification_label.visible = false
+	_ensure_references()
 
-	_apply_mobile_safe_area()
-	get_viewport().size_changed.connect(_apply_mobile_safe_area)
+	if info_panel != null:
+		info_panel.visible = false
+	if notification_label != null:
+		notification_label.visible = false
 
 	# Setup stance options
 	if stance_option_button != null:
@@ -35,55 +67,153 @@ func _ready() -> void:
 		stance_option_button.add_item("Encampment", ArmyData.Stance.ENCAMPMENT)
 		stance_option_button.add_item("Ambush", ArmyData.Stance.AMBUSH)
 		stance_option_button.add_item("Siege", ArmyData.Stance.SIEGE)
-		stance_option_button.item_selected.connect(_on_stance_selected)
+		if not stance_option_button.item_selected.is_connected(_on_stance_selected):
+			stance_option_button.item_selected.connect(_on_stance_selected)
 
-	end_turn_button.pressed.connect(_on_end_turn_pressed)
+	if end_turn_button != null:
+		if not end_turn_button.pressed.is_connected(_on_end_turn_pressed):
+			end_turn_button.pressed.connect(_on_end_turn_pressed)
 
 	# Connect TurnManager
-	var turn_mgr: TurnManager = get_node_or_null("/root/TurnManager")
-	if turn_mgr != null:
-		turn_mgr.turn_started.connect(_on_turn_started)
-		turn_mgr.faction_turn_changed.connect(_on_faction_turn_changed)
-		turn_mgr.player_gold_changed.connect(_on_player_gold_changed)
-		_refresh_top_bar(turn_mgr.current_turn, turn_mgr.get_active_faction(), turn_mgr.get_player_gold())
+	if is_inside_tree():
+		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+		if turn_mgr != null:
+			if turn_mgr.has_signal("turn_started"):
+				turn_mgr.turn_started.connect(_on_turn_started)
+			if turn_mgr.has_signal("faction_turn_changed"):
+				turn_mgr.faction_turn_changed.connect(_on_faction_turn_changed)
+			if turn_mgr.has_signal("player_gold_changed"):
+				turn_mgr.player_gold_changed.connect(_on_player_gold_changed)
+			if turn_mgr.has_signal("turn_processing_started"):
+				turn_mgr.turn_processing_started.connect(on_turn_processing_started)
+			if turn_mgr.has_signal("turn_processing_finished"):
+				turn_mgr.turn_processing_finished.connect(on_turn_processing_finished)
 
-	# Connect CampaignManager
-	var campaign_mgr: CampaignManager = get_node_or_null("/root/CampaignManager")
-	if campaign_mgr != null:
-		campaign_mgr.province_selected.connect(_on_province_selected)
-		campaign_mgr.army_selected.connect(_on_army_selected)
-		campaign_mgr.selection_cleared.connect(_on_selection_cleared)
-		campaign_mgr.battle_triggered.connect(_on_battle_triggered)
-		campaign_mgr.move_rejected.connect(_show_notification)
+			_refresh_top_bar(
+				turn_mgr.current_turn if "current_turn" in turn_mgr else 1,
+				turn_mgr.get_active_faction() if turn_mgr.has_method("get_active_faction") else null,
+				turn_mgr.get_player_gold() if turn_mgr.has_method("get_player_gold") else 0
+			)
 
-	# Connect SaveManager
-	var save_mgr: SaveManager = get_node_or_null("/root/SaveManager")
-	if save_mgr != null:
-		save_mgr.game_saved.connect(func(_slot: String) -> void:
-			_show_notification("Campaign Autosaved (Offline)", 1.2)
-		)
+		# Connect CampaignManager
+		var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+		if campaign_mgr != null:
+			if campaign_mgr.has_signal("province_selected"):
+				campaign_mgr.province_selected.connect(_on_province_selected)
+			if campaign_mgr.has_signal("army_selected"):
+				campaign_mgr.army_selected.connect(_on_army_selected)
+			if campaign_mgr.has_signal("selection_cleared"):
+				campaign_mgr.selection_cleared.connect(clear_selection)
+			if campaign_mgr.has_signal("battle_triggered"):
+				campaign_mgr.battle_triggered.connect(_on_battle_triggered)
+			if campaign_mgr.has_signal("move_rejected"):
+				campaign_mgr.move_rejected.connect(show_notification)
 
-## Adjusts UI margins according to the mobile screen safe area (punch-holes, notches, dynamic island).
-func _apply_mobile_safe_area() -> void:
-	if top_margin_container == null:
-		return
-	
-	var safe_rect: Rect2i = DisplayServer.get_display_safe_area()
-	var window_size: Vector2i = DisplayServer.window_get_size()
+		# Connect SaveManager
+		var save_mgr: Node = get_node_or_null("/root/SaveManager")
+		if save_mgr != null and save_mgr.has_signal("game_saved"):
+			save_mgr.game_saved.connect(func(_slot: String) -> void:
+				show_notification("Campaign Autosaved (Offline)", 1.2)
+			)
 
-	# If running on desktop window or testing, fallback gracefully
-	if safe_rect.size.x == 0 or safe_rect.size.y == 0:
-		return
+## Binds an immutable ProvinceViewModel snapshot directly to the inspection drawer.
+func display_province_view_model(vm: ProvinceViewModel) -> void:
+	_ensure_references()
+	_current_selected_army_id = ""
+	if info_panel != null:
+		info_panel.visible = true
+	if stance_container != null:
+		stance_container.visible = false
 
-	var left_pad: int = maxi(safe_rect.position.x, 15)
-	var right_pad: int = maxi(window_size.x - (safe_rect.position.x + safe_rect.size.x), 15)
-	var top_pad: int = maxi(safe_rect.position.y, 8)
+	if title_label != null:
+		title_label.text = "Province: %s" % vm.province_name
 
-	top_margin_container.add_theme_constant_override("margin_left", left_pad)
-	top_margin_container.add_theme_constant_override("margin_right", right_pad)
-	top_margin_container.add_theme_constant_override("margin_top", top_pad)
+	if details_label != null:
+		var buildings_str: String = "None"
+		if not vm.building_slots_summary.is_empty():
+			var names: Array[String] = []
+			for slot_dict: Dictionary in vm.building_slots_summary:
+				names.append(slot_dict.get("name", "Slot"))
+			buildings_str = ", ".join(names)
+
+		details_label.text = """Owner: %s
+Settlement Tier: %d
+Public Order: %.1f
+Region Wealth: %.0f Gold
+Tax Yield: %d Gold (Upper %d / Lower %d)
+Unrest Pressure: %d
+Buildings: %s""" % [
+			vm.owner_faction_id.capitalize(),
+			vm.settlement_tier,
+			vm.public_order,
+			vm.region_wealth,
+			vm.tax_income,
+			vm.tax_level_upper,
+			vm.tax_level_lower,
+			vm.unrest_pressure,
+			buildings_str
+		]
+
+## Binds an immutable ArmyViewModel snapshot directly to the inspection drawer.
+func display_army_view_model(vm: ArmyViewModel) -> void:
+	_ensure_references()
+	_current_selected_army_id = vm.army_id
+	if info_panel != null:
+		info_panel.visible = true
+	if stance_container != null:
+		stance_container.visible = true
+
+	if stance_option_button != null:
+		stance_option_button.selected = int(vm.stance)
+
+	if title_label != null:
+		title_label.text = "Army: %s" % vm.army_name
+
+	if details_label != null:
+		var roster_str: String = ""
+		for card: Dictionary in vm.unit_cards:
+			roster_str += "\n - %s (T%d, Str: %.0f, Upkeep: %d)" % [
+				card.get("name", "Unit"),
+				card.get("tier", 1),
+				card.get("combat_value", 0.0),
+				card.get("upkeep", 0)
+			]
+
+		details_label.text = """Owner: %s
+Action Points: %.0f / %.0f
+Tactical Stance: %s
+Total Upkeep: %d Gold / turn
+Total Combat Power: %.0f
+Roster (%d units):%s""" % [
+			vm.owner_faction_id.capitalize(),
+			vm.current_action_points,
+			vm.max_action_points,
+			vm.stance_name,
+			vm.total_upkeep,
+			vm.total_combat_power,
+			vm.unit_cards.size(),
+			roster_str
+		]
+
+func clear_selection() -> void:
+	_ensure_references()
+	_current_selected_army_id = ""
+	if info_panel != null:
+		info_panel.visible = false
+
+func on_turn_processing_started() -> void:
+	_ensure_references()
+	if end_turn_button != null:
+		end_turn_button.disabled = true
+	show_notification("Processing Turn...", 1.0)
+
+func on_turn_processing_finished() -> void:
+	_ensure_references()
+	if end_turn_button != null:
+		end_turn_button.disabled = false
 
 func _refresh_top_bar(turn_num: int, active_faction: FactionData, gold: int) -> void:
+	_ensure_references()
 	if turn_label != null:
 		turn_label.text = "Turn %d" % turn_num
 	
@@ -94,115 +224,69 @@ func _refresh_top_bar(turn_num: int, active_faction: FactionData, gold: int) -> 
 	if treasury_label != null:
 		treasury_label.text = "Treasury: %d Gold" % gold
 
+	if food_label != null and active_faction != null:
+		food_label.text = "Food: %+d" % active_faction.food_balance
+
 func _on_end_turn_pressed() -> void:
-	var turn_mgr: TurnManager = get_node_or_null("/root/TurnManager")
-	if turn_mgr != null:
-		turn_mgr.end_active_faction_turn()
+	if is_inside_tree():
+		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+		if turn_mgr != null and turn_mgr.has_method("execute_end_turn"):
+			turn_mgr.execute_end_turn()
 
 func _on_turn_started(turn_number: int, active_faction: FactionData) -> void:
-	var turn_mgr: TurnManager = get_node_or_null("/root/TurnManager")
-	var gold: int = turn_mgr.get_player_gold() if turn_mgr != null else 0
-	_refresh_top_bar(turn_number, active_faction, gold)
+	if is_inside_tree():
+		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+		var gold: int = turn_mgr.get_player_gold() if (turn_mgr != null and turn_mgr.has_method("get_player_gold")) else 0
+		_refresh_top_bar(turn_number, active_faction, gold)
 
 func _on_faction_turn_changed(active_faction: FactionData) -> void:
-	var turn_mgr: TurnManager = get_node_or_null("/root/TurnManager")
-	var gold: int = turn_mgr.get_player_gold() if turn_mgr != null else 0
-	_refresh_top_bar(turn_mgr.current_turn if turn_mgr != null else 1, active_faction, gold)
+	if is_inside_tree():
+		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+		var gold: int = turn_mgr.get_player_gold() if (turn_mgr != null and turn_mgr.has_method("get_player_gold")) else 0
+		var current_turn: int = turn_mgr.current_turn if (turn_mgr != null and "current_turn" in turn_mgr) else 1
+		_refresh_top_bar(current_turn, active_faction, gold)
 
 func _on_player_gold_changed(new_gold: int, _delta: int) -> void:
+	_ensure_references()
 	if treasury_label != null:
 		treasury_label.text = "Treasury: %d Gold" % new_gold
 
 func _on_province_selected(province: ProvinceData) -> void:
-	_current_selected_army = null
-	info_panel.visible = true
-	stance_container.visible = false
-	
-	title_label.text = "Province: %s" % province.province_name
-	
-	var buildings_list: String = "None"
-	if not province.building_slots.is_empty():
-		var names: Array[String] = []
-		for slot: BuildingSlotData in province.building_slots:
-			if slot != null and slot.building_data != null:
-				names.append(slot.building_data.display_name)
-		buildings_list = ", ".join(names)
-
-	details_label.text = """Owner: %s
-Settlement Tier: %d
-Public Order: %.1f
-Base Tax: %.0f (Net: %.0f)
-Growth Rate: +%.1f / turn
-Garrison Size: %d units
-Buildings (%d/%d): %s""" % [
-		province.owner_faction_id.capitalize(),
-		province.settlement_tier,
-		province.public_order,
-		province.base_tax,
-		province.calculate_total_tax(),
-		province.growth_rate,
-		province.garrison_units.size(),
-		province.building_slots.size(),
-		province.max_building_slots,
-		buildings_list
-	]
+	if province != null:
+		var vm: ProvinceViewModel = ProvinceViewModel.from_province_data(province)
+		display_province_view_model(vm)
 
 func _on_army_selected(army: ArmyData) -> void:
-	_current_selected_army = army
-	info_panel.visible = true
-	stance_container.visible = true
-	
-	if stance_option_button != null:
-		stance_option_button.selected = int(army.stance)
-
-	title_label.text = "Army: %s" % army.army_name
-	
-	var unit_summary: String = ""
-	for u: UnitData in army.units:
-		if u != null:
-			unit_summary += "\n - %s (T%d, Str: %.0f, Arm: %d)" % [u.display_name, u.tier, u.get_combat_value(), u.armor]
-
-	details_label.text = """Owner: %s
-Stationed in: %s
-General Rating: %.1fx
-Action Points: %.0f / %.0f
-Stance: %s
-Total Upkeep: %d Gold/turn
-Combat Power: %.0f
-Roster (%d units):%s""" % [
-		army.owner_faction_id.capitalize(),
-		army.current_province_id.capitalize(),
-		army.general_leadership_rating,
-		army.current_action_points,
-		army.max_action_points,
-		army.get_stance_name(),
-		army.calculate_total_upkeep(),
-		army.calculate_total_strength(),
-		army.units.size(),
-		unit_summary
-	]
-
-func _on_selection_cleared() -> void:
-	_current_selected_army = null
-	info_panel.visible = false
+	if army != null:
+		var vm: ArmyViewModel = ArmyViewModel.from_army_data(army)
+		display_army_view_model(vm)
 
 func _on_stance_selected(index: int) -> void:
-	if _current_selected_army != null:
-		_current_selected_army.set_stance(index as ArmyData.Stance)
-		_on_army_selected(_current_selected_army)
+	if _current_selected_army_id.is_empty():
+		return
+	if is_inside_tree():
+		var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+		if campaign_mgr != null and campaign_mgr.has_method("set_army_stance"):
+			campaign_mgr.set_army_stance(_current_selected_army_id, index as ArmyData.Stance)
 
 func _on_battle_triggered(result: BattleResult) -> void:
-	if battle_dialog != null:
+	_ensure_references()
+	if battle_dialog != null and result != null:
 		battle_dialog.title = "Battle Resolved - %s" % ("Victory!" if result.attacker_won else "Defeat!")
 		battle_dialog.dialog_text = result.get_log_message()
-		battle_dialog.popup_centered(Vector2i(520, 320))
-	_on_selection_cleared()
+		battle_dialog.popup_centered(Vector2i(540, 320))
+	clear_selection()
 
-func _show_notification(msg: String, duration: float = 2.0) -> void:
+func show_notification(msg: String, duration: float = 2.0) -> void:
+	_ensure_references()
 	if notification_label != null:
 		notification_label.text = msg
 		notification_label.visible = true
-		var tween: Tween = create_tween()
-		tween.tween_interval(duration)
-		tween.tween_callback(func() -> void: notification_label.visible = false)
-
+		if is_inside_tree():
+			var tween: Tween = create_tween()
+			if tween != null:
+				tween.tween_interval(duration)
+				tween.tween_callback(func() -> void:
+					if notification_label != null and is_instance_valid(notification_label):
+						notification_label.visible = false
+				)

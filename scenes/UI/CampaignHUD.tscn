@@ -1,105 +1,128 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/CampaignHUD.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/SafeAreaContainer.gd" id="2_safe"]
 
 [node name="CampaignHUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
-[node name="TopBar" type="PanelContainer" parent="."]
+[node name="SafeAreaContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_safe")
+
+[node name="HUDLayout" type="Control" parent="SafeAreaContainer"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TopBar" type="PanelContainer" parent="SafeAreaContainer/HUDLayout"]
+layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
-offset_bottom = 50.0
+offset_bottom = 56.0
 grow_horizontal = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="TopBar"]
+[node name="MarginContainer" type="MarginContainer" parent="SafeAreaContainer/HUDLayout/TopBar"]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 4
 
-[node name="HBoxContainer" type="HBoxContainer" parent="TopBar/MarginContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 20
 
-[node name="GameTitle" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+[node name="GameTitle" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "SONS OF HELLAS"
 
-[node name="TurnLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+[node name="TurnLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Turn 1"
 
-[node name="FactionLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+[node name="FactionLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Active: Sparta (Player)"
 
-[node name="TreasuryLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+[node name="TreasuryLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Treasury: 1500 Gold"
 
-[node name="Spacer" type="Control" parent="TopBar/MarginContainer/HBoxContainer"]
+[node name="FoodLabel" type="Label" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Food: +5"
+
+[node name="Spacer" type="Control" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="EndTurnButton" type="Button" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(140, 36)
+[node name="EndTurnButton" type="Button" parent="SafeAreaContainer/HUDLayout/TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(140, 48)
 layout_mode = 2
 text = "End Turn"
 
-[node name="SelectionPanel" type="PanelContainer" parent="."]
+[node name="SelectionPanel" type="PanelContainer" parent="SafeAreaContainer/HUDLayout"]
+layout_mode = 1
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -340.0
-offset_top = 60.0
-offset_right = -15.0
+offset_left = -360.0
+offset_top = 64.0
+offset_right = -12.0
 offset_bottom = -20.0
 grow_horizontal = 0
 grow_vertical = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="SelectionPanel"]
+[node name="MarginContainer" type="MarginContainer" parent="SafeAreaContainer/HUDLayout/SelectionPanel"]
 layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 14
 
-[node name="VBoxContainer" type="VBoxContainer" parent="SelectionPanel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 
-[node name="TitleLabel" type="Label" parent="SelectionPanel/MarginContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "Province Name"
 
-[node name="HSeparator" type="HSeparator" parent="SelectionPanel/MarginContainer/VBoxContainer"]
+[node name="HSeparator" type="HSeparator" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="StanceContainer" type="HBoxContainer" parent="SelectionPanel/MarginContainer/VBoxContainer"]
+[node name="StanceContainer" type="HBoxContainer" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 8
 
-[node name="StanceLabel" type="Label" parent="SelectionPanel/MarginContainer/VBoxContainer/StanceContainer"]
+[node name="StanceLabel" type="Label" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/StanceContainer"]
 layout_mode = 2
-text = "Tactical Stance: "
+text = "Stance:"
 
-[node name="StanceOptionButton" type="OptionButton" parent="SelectionPanel/MarginContainer/VBoxContainer/StanceContainer"]
+[node name="StanceOptionButton" type="OptionButton" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer/StanceContainer"]
+custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="DetailsLabel" type="Label" parent="SelectionPanel/MarginContainer/VBoxContainer"]
+[node name="DetailsLabel" type="Label" parent="SafeAreaContainer/HUDLayout/SelectionPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 text = "Details go here..."
 autowrap_mode = 2
 
-[node name="NotificationLabel" type="Label" parent="."]
+[node name="NotificationLabel" type="Label" parent="SafeAreaContainer/HUDLayout"]
+layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
@@ -108,15 +131,15 @@ anchor_bottom = 1.0
 offset_left = -250.0
 offset_top = -80.0
 offset_right = 250.0
-offset_bottom = -40.0
+offset_bottom = -32.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+theme_override_font_sizes/font_size = 16
 text = "Notification Message"
 horizontal_alignment = 1
 
 [node name="BattleDialog" type="AcceptDialog" parent="."]
 title = "Battle Resolved"
-size = Vector2i(540, 300)
+size = Vector2i(540, 320)
 ok_button_text = "Confirm"

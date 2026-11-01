@@ -204,6 +204,16 @@ func _init() -> void:
 		print("  -> FAILED: TestCampaignCamera (%d errors)" % cam_failures.size())
 		for f: String in cam_failures:
 			print("     * " + f)
+
+	print("[RUNNING] TestCampaignHUD...")
+	var hud_failures: Array[String] = TestCampaignHUD.run_all_tests()
+	if hud_failures.is_empty():
+		print("  -> PASSED: TestCampaignHUD")
+	else:
+		total_failures += hud_failures.size()
+		print("  -> FAILED: TestCampaignHUD (%d errors)" % hud_failures.size())
+		for f: String in hud_failures:
+			print("     * " + f)
 			
 	print("\n------------------------------------------")
 	if total_failures == 0:
