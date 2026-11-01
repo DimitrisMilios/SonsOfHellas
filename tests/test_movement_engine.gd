@@ -10,6 +10,9 @@ static func run_all_tests() -> Array[String]:
 	_test_ap_insufficiency_and_epsilon(failures)
 	_test_siege_stance_immobility(failures)
 	_test_zoc_hostile_interception(failures)
+	_test_zoc_ap_reduction_to_zero(failures)
+	_test_trade_route_raiding_income(failures)
+	_test_retreat_vector_and_destination_selection(failures)
 	_test_movement_execution_purity_and_application(failures)
 	return failures
 
@@ -120,8 +123,73 @@ static func _test_zoc_hostile_interception(failures: Array[String]) -> void:
 	if friendly_intercept:
 		failures.append("Moving into friendly province should not trigger interception")
 
+static func _test_zoc_ap_reduction_to_zero(failures: Array[String]) -> void:
+	var provs: Array[ProvinceData] = _create_test_provinces()
+	var sparta: ProvinceData = provs[0]
+	var corinth: ProvinceData = provs[1]
+	corinth.owner_faction_id = "faction_corinth" # Hostile
+	
+	var army: ArmyData = ArmyData.new()
+	army.owner_faction_id = "faction_sparta"
+	army.current_province_id = "prov_sparta"
+	army.current_action_points = 100.0
+	
+	var res: Dictionary = MovementEngine.calculate_movement_result(army, sparta, corinth, "plains", 0)
+	if not res["triggers_engagement"]:
+		failures.append("Expected movement to hostile province to trigger engagement")
+	if res["remaining_ap"] != 0.0:
+		failures.append("ZoC hostile interception should reduce remaining AP to 0.0, got: %f" % res["remaining_ap"])
+
+static func _test_trade_route_raiding_income(failures: Array[String]) -> void:
+	# I_raid = W_lane * alpha_raid (e.g., 500 wealth * 0.20 = 100 gold)
+	var income: int = MovementEngine.calculate_raiding_income(500.0, 0.20)
+	if income != 100:
+		failures.append("Expected raiding income 100, got: %d" % income)
+		
+	# Clamping and zero-bound protection
+	var zero_income: int = MovementEngine.calculate_raiding_income(-100.0, 0.50)
+	if zero_income != 0:
+		failures.append("Raiding income for negative wealth should clamp to 0")
+
+static func _test_retreat_vector_and_destination_selection(failures: Array[String]) -> void:
+	var provs: Array[ProvinceData] = _create_test_provinces()
+	var sparta: ProvinceData = provs[0]
+	sparta.map_position = Vector2(100.0, 100.0)
+	
+	var corinth: ProvinceData = provs[1]
+	corinth.map_position = Vector2(200.0, 100.0)
+	
+	var athens: ProvinceData = provs[2]
+	athens.map_position = Vector2(300.0, 100.0)
+	
+	var prov_map: Dictionary = {
+		"prov_sparta": sparta,
+		"prov_corinth": corinth,
+		"prov_athens": athens
+	}
+	
+	# Attacker at Athens (300, 100), Defender at Corinth (200, 100)
+	# Retreat vector from Corinth away from Athens points LEFT (-1, 0) towards Sparta!
+	var vec: Vector2 = MovementEngine.calculate_retreat_vector(corinth.map_position, athens.map_position)
+	if not is_equal_approx(vec.x, -1.0) or not is_equal_approx(vec.y, 0.0):
+		failures.append("Expected retreat vector (-1.0, 0.0), got: " + str(vec))
+		
+	var def_army: ArmyData = ArmyData.new()
+	def_army.owner_faction_id = "faction_corinth"
+	def_army.current_province_id = "prov_corinth"
+	
+	var att_army: ArmyData = ArmyData.new()
+	att_army.owner_faction_id = "faction_athens"
+	att_army.current_province_id = "prov_athens"
+	
+	# Sparta is neutral/friendly (owner = faction_sparta, not hostile faction_athens)
+	var best_retreat: String = MovementEngine.find_best_retreat_province(def_army, corinth, att_army, prov_map)
+	if best_retreat != "prov_sparta":
+		failures.append("Expected retreat destination to be prov_sparta, got: " + best_retreat)
+
 static func _test_movement_execution_purity_and_application(failures: Array[String]) -> void:
 	var provs: Array[ProvinceData] = _create_test_provinces()
+	provs[1].owner_faction_id = "faction_sparta" # Friendly province for peaceful move
 	var army: ArmyData = ArmyData.new()
 	army.owner_faction_id = "faction_sparta"
 	army.current_province_id = "prov_sparta"

@@ -35,6 +35,65 @@ static func calculate_ap_cost(terrain: String = "plains", road_tier: int = 0) ->
 	var t_mod: float = get_terrain_modifier(terrain)
 	return (BASE_MOVEMENT_AP_COST * t_mod) / (1.0 + m_road)
 
+## Calculates trade route raiding income: I_raid = W_lane * alpha_raid.
+static func calculate_raiding_income(lane_wealth: float, raid_fraction: float = 0.20) -> int:
+	var safe_wealth: float = maxf(0.0, lane_wealth)
+	var safe_alpha: float = clampf(raid_fraction, 0.0, 1.0)
+	return roundi(safe_wealth * safe_alpha)
+
+## Calculates 2D spatial retreat vector pointing away from attacking force.
+static func calculate_retreat_vector(from_position: Vector2, away_from_position: Vector2) -> Vector2:
+	var dir: Vector2 = from_position - away_from_position
+	if dir.is_zero_approx():
+		return Vector2.DOWN
+	return dir.normalized()
+
+## Finds the best eligible adjacent province for a retreating army.
+## Trapped armies with no valid friendly or neutral path return "" (forcing stack destruction).
+static func find_best_retreat_province(
+	defeated_army: ArmyData,
+	current_prov: ProvinceData,
+	enemy_army: ArmyData,
+	provinces_map: Dictionary
+) -> String:
+	if defeated_army == null or current_prov == null:
+		return ""
+		
+	var enemy_pos: Vector2 = Vector2.ZERO
+	if enemy_army != null and provinces_map.has(enemy_army.current_province_id):
+		var ep: ProvinceData = provinces_map[enemy_army.current_province_id]
+		if ep != null:
+			enemy_pos = ep.map_position
+			
+	var retreat_vec: Vector2 = calculate_retreat_vector(current_prov.map_position, enemy_pos)
+	var best_prov_id: String = ""
+	var best_score: float = -999999.0
+	
+	for adj_id: String in current_prov.adjacent_province_ids:
+		if not provinces_map.has(adj_id):
+			continue
+		var adj_prov: ProvinceData = provinces_map[adj_id]
+		if adj_prov == null:
+			continue
+			
+		# Cannot retreat into enemy faction's territory
+		if enemy_army != null and adj_prov.owner_faction_id != "" and adj_prov.owner_faction_id == enemy_army.owner_faction_id:
+			continue
+			
+		# Score based on alignment with retreat vector away from attacker
+		var to_adj: Vector2 = (adj_prov.map_position - current_prov.map_position).normalized()
+		var alignment: float = retreat_vec.dot(to_adj)
+		
+		# Bonus if already owned by friendly faction
+		var friendly_bonus: float = 2.0 if adj_prov.owner_faction_id == defeated_army.owner_faction_id else 0.0
+		var score: float = alignment + friendly_bonus
+		
+		if score > best_score:
+			best_score = score
+			best_prov_id = adj_id
+			
+	return best_prov_id
+
 ## Validates whether an army can execute campaign movement to destination province.
 static func can_move_to_province(
 	army: ArmyData,
@@ -138,6 +197,9 @@ static func calculate_movement_result(
 		
 	var remaining: float = maxf(0.0, army.current_action_points - ap_cost)
 	var engagement: bool = is_hostile_intercept(army, to_prov, stationed_armies)
+	if engagement:
+		# Entering hostile Zone of Control halts campaign movement and consumes remaining AP
+		remaining = 0.0
 	
 	return {
 		"success": true,
@@ -154,4 +216,6 @@ static func apply_movement(army: ArmyData, movement_result: Dictionary, destinat
 		
 	var cost: float = movement_result.get("ap_cost", 0.0)
 	army.consume_action_points(cost)
+	if movement_result.get("triggers_engagement", false):
+		army.current_action_points = 0.0
 	army.current_province_id = destination_province_id
