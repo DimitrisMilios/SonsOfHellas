@@ -12,11 +12,16 @@ run/main_scene="res://scenes/MainCampaign.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 run/max_fps=60
 
+[audio]
+
+driver/mix_rate=48000
+
 [autoload]
 
 TurnManager="*res://scripts/core/TurnManager.gd"
 CampaignManager="*res://scripts/core/CampaignManager.gd"
 SaveManager="*res://scripts/core/SaveManager.gd"
+AudioManager="*res://scripts/core/AudioManager.gd"
 
 [display]
 
