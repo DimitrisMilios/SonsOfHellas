@@ -454,11 +454,11 @@ Phase 4 integrates the data and math engines into visual Godot nodes, handling t
 
 ---
 
-## Phase 5: Mobile Polish, Sound/VFX & Export Optimization - [IN PROGRESS]
+## Phase 5: Mobile Polish, Sound/VFX & Export Optimization - [COMPLETED & VERIFIED: 100% ROCK SOLID]
 
 Phase 5 addresses GLES3 mobile rendering optimizations, CPUParticles2D pooling, low-latency audio bus management, priority channel stealing, two-phase turn autosaving, and cold-start title screen recovery based on ADR-0003.
 
-### Task 5.1: Material Lint & Passive Node Decoupling
+### Task 5.1: Material Lint & Passive Node Decoupling [COMPLETED]
 * **Target File Path**: `res://scripts/world/ProvinceNode.gd`, `res://scripts/world/ArmyNode.gd`, `res://scenes/ProvinceNode.tscn`, `res://scenes/ArmyNode.tscn`
 * **Description**: Remove redundant `Area2D` and `CollisionShape2D` nodes from `ProvinceNode` and `ArmyNode` since picking is centralized in `CampaignInputRouter`. Ensure passive visual nodes possess zero custom `ShaderMaterial` or `CanvasItemMaterial` overrides, using `modulate` and `self_modulate` only.
 * **Automated Unit Test Requirements**:
@@ -467,7 +467,7 @@ Phase 5 addresses GLES3 mobile rendering optimizations, CPUParticles2D pooling, 
 
 ---
 
-### Task 5.2: VFX Particle Pool & Campaign Frustum Culling
+### Task 5.2: VFX Particle Pool & Campaign Frustum Culling [COMPLETED]
 * **Target File Path**: `res://scripts/world/VFXPool.gd`
 * **Description**: Implement fixed 6-emitter `CPUParticles2D` pool attached to `CampaignMapView`. Enforces strict particle budgets (March dust $\le 12$, Siege smoke $\le 16$, Battle sparks $\le 12$). Disallows `GPUParticles2D`. Drops effects when the pool is exhausted or when camera zoom is $< 0.6$.
 * **Automated Unit Test Requirements**:
@@ -477,7 +477,7 @@ Phase 5 addresses GLES3 mobile rendering optimizations, CPUParticles2D pooling, 
 
 ---
 
-### Task 5.3: Centralized Mobile Audio Manager & Priority Channel Stealing
+### Task 5.3: Centralized Mobile Audio Manager & Priority Channel Stealing [COMPLETED]
 * **Target File Path**: `res://scripts/core/AudioManager.gd`
 * **Description**: Create autoload audio manager with fixed player pools (8 SFX, 2 Music/Ambience, 2 UI). Implements 48 kHz bus routing, priority stealing (UI=3 > Battle=2 > Ambient=1), retrigger rate limits (60 ms), volume ducking via single tween per bus, and automatic pause silencing on `NOTIFICATION_APPLICATION_PAUSED`.
 * **Automated Unit Test Requirements**:
@@ -487,7 +487,7 @@ Phase 5 addresses GLES3 mobile rendering optimizations, CPUParticles2D pooling, 
 
 ---
 
-### Task 5.4: Two-Phase Turn Autosave & Fallback Resilience
+### Task 5.4: Two-Phase Turn Autosave & Fallback Resilience [COMPLETED]
 * **Target File Path**: `res://scripts/core/TurnManager.gd` and `res://scripts/core/SaveManager.gd`
 * **Description**: Implement mandatory turn-start autosave on `IDLE` entry, and turn-commit autosave on End Turn order confirmation (`turn_committed = true`). Update `SaveManager` with three-tier fallback (`main` $\rightarrow$ `tmp` $\rightarrow$ `bak`), non-blocking recovery toast, and deterministic pipeline replay upon loading committed turns.
 * **Automated Unit Test Requirements**:
@@ -497,7 +497,7 @@ Phase 5 addresses GLES3 mobile rendering optimizations, CPUParticles2D pooling, 
 
 ---
 
-### Task 5.5: Title Screen & Cold-Start Bootstrap
+### Task 5.5: Title Screen & Cold-Start Bootstrap [COMPLETED]
 * **Target File Path**: `res://scenes/TitleScreen.tscn` and `res://scripts/ui/TitleScreen.gd`
 * **Description**: Create clean title screen with "Continue Campaign" button reading autosave metadata (faction, turn, timestamp). Provides graceful handling of unreadable saves and transitions into `MainCampaign.tscn`.
 * **Automated Unit Test Requirements**:
