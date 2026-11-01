@@ -121,9 +121,9 @@ func _on_province_selected(province: ProvinceData) -> void:
 	var buildings_list: String = "None"
 	if not province.building_slots.is_empty():
 		var names: Array[String] = []
-		for b: BuildingData in province.building_slots:
-			if b != null:
-				names.append(b.display_name)
+		for slot: BuildingSlotData in province.building_slots:
+			if slot != null and slot.building_data != null:
+				names.append(slot.building_data.display_name)
 		buildings_list = ", ".join(names)
 
 	details_label.text = """Owner: %s
@@ -158,7 +158,7 @@ func _on_army_selected(army: ArmyData) -> void:
 	var unit_summary: String = ""
 	for u: UnitData in army.units:
 		if u != null:
-			unit_summary += "\n • %s (T%d, Str: %.0f, Arm: %.0f)" % [u.display_name, u.tier, u.base_strength, u.armor]
+			unit_summary += "\n â€¢ %s (T%d, Str: %.0f, Arm: %.0f)" % [u.display_name, u.tier, u.base_strength, u.armor]
 
 	details_label.text = """Owner: %s
 Stationed in: %s
@@ -203,3 +203,4 @@ func _show_notification(msg: String, duration: float = 2.0) -> void:
 		var tween: Tween = create_tween()
 		tween.tween_interval(duration)
 		tween.tween_callback(func() -> void: notification_label.visible = false)
+

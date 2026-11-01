@@ -1,0 +1,83 @@
+extends SceneTree
+
+const TestUnitData = preload("res://tests/test_unit_data.gd")
+const TestBuildingData = preload("res://tests/test_building_data.gd")
+const TestProvinceData = preload("res://tests/test_province_data.gd")
+const TestFactionData = preload("res://tests/test_faction_data.gd")
+const TestArmyData = preload("res://tests/test_army_data.gd")
+const TestDataRegistry = preload("res://tests/test_data_registry.gd")
+
+func _init() -> void:
+	print("\n==========================================")
+	print("       SONS OF HELLAS - UNIT TEST RUNNER   ")
+	print("==========================================\n")
+	
+	var total_failures: int = 0
+	
+	print("[RUNNING] TestUnitData...")
+	var unit_failures: Array[String] = TestUnitData.run_all_tests()
+	if unit_failures.is_empty():
+		print("  -> PASSED: TestUnitData")
+	else:
+		total_failures += unit_failures.size()
+		print("  -> FAILED: TestUnitData (%d errors)" % unit_failures.size())
+		for f: String in unit_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestBuildingData...")
+	var bld_failures: Array[String] = TestBuildingData.run_all_tests()
+	if bld_failures.is_empty():
+		print("  -> PASSED: TestBuildingData")
+	else:
+		total_failures += bld_failures.size()
+		print("  -> FAILED: TestBuildingData (%d errors)" % bld_failures.size())
+		for f: String in bld_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestProvinceData...")
+	var prov_failures: Array[String] = TestProvinceData.run_all_tests()
+	if prov_failures.is_empty():
+		print("  -> PASSED: TestProvinceData")
+	else:
+		total_failures += prov_failures.size()
+		print("  -> FAILED: TestProvinceData (%d errors)" % prov_failures.size())
+		for f: String in prov_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestFactionData...")
+	var fac_failures: Array[String] = TestFactionData.run_all_tests()
+	if fac_failures.is_empty():
+		print("  -> PASSED: TestFactionData")
+	else:
+		total_failures += fac_failures.size()
+		print("  -> FAILED: TestFactionData (%d errors)" % fac_failures.size())
+		for f: String in fac_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestArmyData...")
+	var army_failures: Array[String] = TestArmyData.run_all_tests()
+	if army_failures.is_empty():
+		print("  -> PASSED: TestArmyData")
+	else:
+		total_failures += army_failures.size()
+		print("  -> FAILED: TestArmyData (%d errors)" % army_failures.size())
+		for f: String in army_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestDataRegistry...")
+	var reg_failures: Array[String] = TestDataRegistry.run_all_tests()
+	if reg_failures.is_empty():
+		print("  -> PASSED: TestDataRegistry")
+	else:
+		total_failures += reg_failures.size()
+		print("  -> FAILED: TestDataRegistry (%d errors)" % reg_failures.size())
+		for f: String in reg_failures:
+			print("     * " + f)
+			
+	print("\n------------------------------------------")
+	if total_failures == 0:
+		print("ALL TESTS PASSED!")
+		quit(0)
+	else:
+		print("TEST SUITE FAILED with %d total errors." % total_failures)
+		quit(1)

@@ -1,5 +1,4 @@
-class_name CampaignManager
-extends Node
+﻿extends Node
 
 ## Signals for UI and World visualization
 signal province_selected(province_data: ProvinceData)
@@ -245,3 +244,4 @@ func _refresh_faction_economics(faction: FactionData) -> void:
 	
 	faction.total_income = total_inc
 	faction.total_upkeep = total_upk
+

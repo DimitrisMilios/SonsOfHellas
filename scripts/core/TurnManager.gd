@@ -1,5 +1,4 @@
-class_name TurnManager
-extends Node
+﻿extends Node
 
 ## Emitted when a new faction's turn begins.
 signal turn_started(turn_number: int, active_faction: FactionData)
@@ -109,3 +108,4 @@ func modify_player_gold(amount: int) -> void:
 func get_player_gold() -> int:
 	var player: FactionData = get_player_faction()
 	return player.treasury if player != null else 0
+

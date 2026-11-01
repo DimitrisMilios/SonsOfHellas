@@ -1,4 +1,3 @@
-class_name SaveManager
 extends Node
 
 signal game_saved(slot_name: String)
@@ -65,9 +64,9 @@ func save_game(slot_name: String = DEFAULT_SAVE_SLOT) -> bool:
 		var prov: ProvinceData = campaign_mgr.provinces[prov_id]
 		if prov != null:
 			var building_ids: Array[String] = []
-			for b: BuildingData in prov.building_slots:
-				if b != null:
-					building_ids.append(b.building_id)
+			for slot: BuildingSlotData in prov.building_slots:
+				if slot != null and slot.building_data != null:
+					building_ids.append(slot.building_data.building_id)
 			
 			save_data["provinces"].append({
 				"province_id": prov.province_id,
@@ -189,3 +188,5 @@ func load_game(slot_name: String = DEFAULT_SAVE_SLOT) -> bool:
 	is_loading = false
 	game_loaded.emit(slot_name)
 	return true
+
+
