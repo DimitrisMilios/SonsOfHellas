@@ -170,11 +170,11 @@ All models in Phase 1 inherit from `Resource` or `RefCounted`, possess zero `Nod
 
 ---
 
-## Phase 2: Pure Mathematical Engines
+## Phase 2: Pure Mathematical Engines - [COMPLETED & VERIFIED: 100% ROCK SOLID]
 
 Phase 2 builds stateless or RefCounted computation engines that execute all formulas from the design specifications. They are 100% testable in isolation without Godot node trees.
 
-### Task 2.1: Settlement Economy & Public Order Math Engine
+### Task 2.1: Settlement Economy & Public Order Math Engine [COMPLETED]
 * **Target File Path**: `res://scripts/core/EconomyCalculator.gd`
 * **Description**: Implement the mathematical formulas from `docs/design/settlement_economy.md`:
   * Class tax rates: $T_{\text{class}} = 0.05 \times L_{\text{tax}}$
@@ -207,7 +207,7 @@ Phase 2 builds stateless or RefCounted computation engines that execute all form
 
 ---
 
-### Task 2.2: Automated Combat Resolution (Auto-Resolve) Engine
+### Task 2.2: Automated Combat Resolution (Auto-Resolve) Engine [COMPLETED]
 * **Target File Path**: `res://scripts/core/AutoResolveEngine.gd`
 * **Description**: Implement the combat mathematics from `docs/design/autoresolve_math.md`:
   * Melee Combat Value: $S_{\text{melee}} = A_{\text{melee}} + 0.6 D_{\text{melee}} + 0.5 ARM + 0.4 CB$
@@ -236,7 +236,7 @@ Phase 2 builds stateless or RefCounted computation engines that execute all form
 
 ---
 
-### Task 2.3: Battle Result Container & Logging
+### Task 2.3: Battle Result Container & Logging [COMPLETED]
 * **Target File Path**: `res://scripts/core/BattleResult.gd`
 * **Description**: Expand `BattleResult` to encapsulate comprehensive combat telemetry: combat powers, logit win probability, victory classification string, victor/loser loss percentages, model casualty counts per unit, remaining survivor rosters, wipeout state, and retreat vector.
 * **Concrete Inputs & Expected Outputs**:
@@ -250,7 +250,7 @@ Phase 2 builds stateless or RefCounted computation engines that execute all form
 
 ---
 
-### Task 2.4: Campaign Movement, Zone of Control & Raiding Math Engine
+### Task 2.4: Campaign Movement, Zone of Control & Raiding Math Engine [COMPLETED]
 * **Target File Path**: `res://scripts/core/MovementEngine.gd`
 * **Description**: Implement movement mechanics and stance modifiers from `docs/design/movement_stances.md`:
   * Road infrastructure speed formula: $S_{\text{effective}} = S_{\text{base}} \times (1 + M_{\text{road}})$.
