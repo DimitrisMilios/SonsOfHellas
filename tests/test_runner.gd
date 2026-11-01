@@ -9,6 +9,7 @@ const TestDataRegistry = preload("res://tests/test_data_registry.gd")
 const TestEconomyCalculator = preload("res://tests/test_economy_calculator.gd")
 const TestBattleResult = preload("res://tests/test_battle_result.gd")
 const TestAutoResolveEngine = preload("res://tests/test_autoresolve_engine.gd")
+const TestMovementEngine = preload("res://tests/test_movement_engine.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -105,6 +106,16 @@ func _init() -> void:
 		total_failures += ar_failures.size()
 		print("  -> FAILED: TestAutoResolveEngine (%d errors)" % ar_failures.size())
 		for f: String in ar_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestMovementEngine...")
+	var mov_failures: Array[String] = TestMovementEngine.run_all_tests()
+	if mov_failures.is_empty():
+		print("  -> PASSED: TestMovementEngine")
+	else:
+		total_failures += mov_failures.size()
+		print("  -> FAILED: TestMovementEngine (%d errors)" % mov_failures.size())
+		for f: String in mov_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")
