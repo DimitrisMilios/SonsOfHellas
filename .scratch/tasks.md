@@ -273,11 +273,11 @@ Phase 2 builds stateless or RefCounted computation engines that execute all form
 
 ---
 
-## Phase 3: Turn Pipeline & State Machine
+## Phase 3: Turn Pipeline & State Machine - [COMPLETED & VERIFIED: 100% ROCK SOLID]
 
 Phase 3 builds the campaign progression state machine and AI decision logic, sequencing phases deterministically while ensuring asynchronous execution for mobile performance.
 
-### Task 3.1: Turn Execution Pipeline Controller
+### Task 3.1: Turn Execution Pipeline Controller [COMPLETED]
 * **Target File Path**: `res://scripts/core/TurnPipeline.gd`
 * **Description**: Implement the deterministic 7-step turn execution sequence defined in `docs/design/campaign_ai.md`:
   * **Step 1**: Revenue Collection & Financial Update ($I_{\text{gross}}$, $WG$ delta applied to $W_{\text{region}}$).
@@ -302,7 +302,7 @@ Phase 3 builds the campaign progression state machine and AI decision logic, seq
 
 ---
 
-### Task 3.2: AI Budgeting, Target Selection & Tactical Scoring Engine
+### Task 3.2: AI Budgeting, Target Selection & Tactical Scoring Engine [COMPLETED]
 * **Target File Path**: `res://scripts/core/CampaignAIDecisionEngine.gd`
 * **Description**: Implement AI decision-making algorithms from `docs/design/campaign_ai.md`:
   * Financial allocation across buckets:
@@ -329,7 +329,7 @@ Phase 3 builds the campaign progression state machine and AI decision logic, seq
 
 ---
 
-### Task 3.3: Mobile-Optimized Turn Manager Autoload
+### Task 3.3: Mobile-Optimized Turn Manager Autoload [COMPLETED]
 * **Target File Path**: `res://scripts/core/TurnManager.gd`
 * **Description**: Refactor `TurnManager` to wrap `TurnPipeline` with non-blocking async execution (`await get_tree().process_frame`) so background AI calculations never freeze the mobile UI thread or cause Android ANR (Application Not Responding) warnings.
 * **Concrete Inputs & Expected Outputs**:
@@ -344,7 +344,7 @@ Phase 3 builds the campaign progression state machine and AI decision logic, seq
 
 ---
 
-### Task 3.4: Complete Schema Serialization & Offline Save Manager
+### Task 3.4: Complete Schema Serialization & Offline Save Manager [COMPLETED]
 * **Target File Path**: `res://scripts/core/SaveManager.gd`
 * **Description**: Upgrade `SaveManager` to serialize all new data structures: building slots, construction turns remaining, unit recruitment queues, active garrisons, consecutive unrest turns, army stances, and faction budgets to `user://saves/*.json`. Ensures mobile lifecycle listeners (`NOTIFICATION_APPLICATION_PAUSED` and `NOTIFICATION_WM_GO_BACK_REQUEST`) trigger atomic autosaves.
 * **Concrete Inputs & Expected Outputs**:
