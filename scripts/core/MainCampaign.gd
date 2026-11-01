@@ -5,25 +5,35 @@ extends Node2D
 @export var province_resources: Array[ProvinceData] = []
 @export var army_resources: Array[ArmyData] = []
 
-@export var province_scene: PackedScene = preload("res://scenes/ProvinceNode.tscn")
-@export var army_scene: PackedScene = preload("res://scenes/ArmyNode.tscn")
-
 @onready var world_container: Node2D = $World
 @onready var roads_container: Node2D = $World/Roads
-@onready var provinces_container: Node2D = $World/Provinces
-@onready var armies_container: Node2D = $World/Armies
+@onready var map_view: CampaignMapView = $World/CampaignMapView
 @onready var camera: CampaignCamera = $CampaignCamera
+@onready var hud: CampaignHUD = $CampaignHUD
+
+# Touch gesture discrimination tracking
+var _touch_start_pos: Vector2 = Vector2.ZERO
+var _touch_start_time: int = 0
+var _is_touching: bool = false
+var _mouse_start_pos: Vector2 = Vector2.ZERO
+var _mouse_start_time: int = 0
+var _is_mouse_down: bool = false
 
 func _ready() -> void:
 	_load_default_presets_if_empty()
 	_initialize_factions()
-	_spawn_provinces()
-	_spawn_armies()
+	_initialize_campaign_manager()
+	_wire_signals()
 	_draw_road_connections()
 	
+	# Initial map view build
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null and map_view != null:
+		map_view.rebuild_from_state(campaign_mgr.provinces, campaign_mgr.armies)
+
 	# Start turn loop
-	var turn_mgr: TurnManager = get_node_or_null("/root/TurnManager")
-	if turn_mgr != null:
+	var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+	if turn_mgr != null and turn_mgr.has_method("start_campaign"):
 		turn_mgr.start_campaign()
 
 func _load_default_presets_if_empty() -> void:
@@ -43,33 +53,102 @@ func _load_default_presets_if_empty() -> void:
 		army_resources.append(load("res://resources/armies/athenian_army.tres") as ArmyData)
 
 func _initialize_factions() -> void:
-	var turn_mgr: TurnManager = get_node_or_null("/root/TurnManager")
-	if turn_mgr != null:
+	var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+	if turn_mgr != null and turn_mgr.has_method("register_faction"):
 		for faction: FactionData in faction_resources:
 			if faction != null:
 				turn_mgr.register_faction(faction)
 
-func _spawn_provinces() -> void:
-	for prov_data: ProvinceData in province_resources:
-		if prov_data == null:
-			continue
-		var prov_instance: ProvinceNode = province_scene.instantiate() as ProvinceNode
-		prov_instance.province_data = prov_data
-		provinces_container.add_child(prov_instance)
+func _initialize_campaign_manager() -> void:
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null:
+		for p: ProvinceData in province_resources:
+			if p != null:
+				campaign_mgr.register_province(p)
+		for a: ArmyData in army_resources:
+			if a != null:
+				campaign_mgr.register_army(a)
 
-func _spawn_armies() -> void:
-	for army_data: ArmyData in army_resources:
-		if army_data == null:
-			continue
-		var army_instance: ArmyNode = army_scene.instantiate() as ArmyNode
-		army_instance.army_data = army_data
-		armies_container.add_child(army_instance)
+func _wire_signals() -> void:
+	if camera != null and map_view != null:
+		camera.zoom_changed.connect(map_view.on_camera_zoom_changed)
+		map_view.on_camera_zoom_changed(camera.zoom)
+
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null:
+		campaign_mgr.province_selected.connect(_on_province_selected)
+		campaign_mgr.army_selected.connect(_on_army_selected)
+		campaign_mgr.selection_cleared.connect(_on_selection_cleared)
+		campaign_mgr.province_ownership_changed.connect(_on_ownership_changed)
+		campaign_mgr.army_movement_completed.connect(_on_movement_completed)
+
+func _on_province_selected(p: ProvinceData) -> void:
+	if hud != null:
+		var vm: ProvinceViewModel = ProvinceViewModel.from_province_data(p)
+		hud.display_province_view_model(vm)
+	if map_view != null:
+		map_view.select_entity("province", p.province_id)
+
+func _on_army_selected(a: ArmyData) -> void:
+	if hud != null:
+		var vm: ArmyViewModel = ArmyViewModel.from_army_data(a)
+		hud.display_army_view_model(vm)
+	if map_view != null:
+		map_view.select_entity("army", a.army_id)
+
+func _on_selection_cleared() -> void:
+	if hud != null:
+		hud.clear_selection()
+	if map_view != null:
+		map_view.clear_selection()
+
+func _on_ownership_changed(_p: ProvinceData, _old_id: String, _new_id: String) -> void:
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null and map_view != null:
+		map_view.rebuild_from_state(campaign_mgr.provinces, campaign_mgr.armies)
+
+func _on_movement_completed(_a: ArmyData, _to_id: String) -> void:
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null and map_view != null:
+		map_view.rebuild_from_state(campaign_mgr.provinces, campaign_mgr.armies)
+
+func _unhandled_input(event: InputEvent) -> void:
+	# --- Mobile Screen Touch Tap Detection ---
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			_touch_start_pos = event.position
+			_touch_start_time = Time.get_ticks_msec()
+			_is_touching = true
+		elif _is_touching:
+			_is_touching = false
+			var duration_ms: float = float(Time.get_ticks_msec() - _touch_start_time)
+			if CampaignInputRouter.is_tap_gesture(_touch_start_pos, event.position, duration_ms):
+				_dispatch_tap(event.position)
+
+	# --- Desktop Mouse Click Tap Detection ---
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			_mouse_start_pos = event.position
+			_mouse_start_time = Time.get_ticks_msec()
+			_is_mouse_down = true
+		elif _is_mouse_down:
+			_is_mouse_down = false
+			var duration_ms: float = float(Time.get_ticks_msec() - _mouse_start_time)
+			if CampaignInputRouter.is_tap_gesture(_mouse_start_pos, event.position, duration_ms):
+				_dispatch_tap(event.position)
+
+func _dispatch_tap(screen_pos: Vector2) -> void:
+	if camera == null:
+		return
+	var world_pos: Vector2 = camera.screen_to_world(screen_pos)
+	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
+	if campaign_mgr != null and campaign_mgr.has_method("handle_world_tap"):
+		campaign_mgr.handle_world_tap(world_pos)
 
 func _draw_road_connections() -> void:
 	if roads_container == null:
 		return
 	
-	# Script-driven line drawing for adjacency visualizer
 	var drawer: Node2D = Node2D.new()
 	drawer.name = "RoadLinesDrawer"
 	drawer.draw.connect(func() -> void:
@@ -83,10 +162,9 @@ func _draw_road_connections() -> void:
 				if drawn_pairs.has(pair_key_1) or drawn_pairs.has(pair_key_2):
 					continue
 				
-				# Locate neighbor province position
 				var neighbor: ProvinceData = _find_province_by_id(adj_id)
 				if neighbor != null:
-					drawer.draw_line(prov_data.map_position, neighbor.map_position, Color(0.7, 0.6, 0.4, 0.5), 4.0, true)
+					drawer.draw_line(prov_data.map_position, neighbor.map_position, Color(0.75, 0.65, 0.45, 0.6), 4.0, true)
 					drawn_pairs[pair_key_1] = true
 	)
 	roads_container.add_child(drawer)

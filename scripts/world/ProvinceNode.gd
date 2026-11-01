@@ -6,8 +6,8 @@ const BASE_RADIUS: float = 56.0
 @export var province_id: String = ""
 var view_model: ProvinceViewModel = null
 
-@onready var collision_shape: CollisionShape2D = $CollisionShape2D
-@onready var label: Label = $Label
+var collision_shape: CollisionShape2D = null
+var label: Label = null
 
 var is_hovered: bool = false
 var is_selected: bool = false
@@ -15,11 +15,28 @@ var effective_touch_radius: float = BASE_RADIUS
 
 func _ready() -> void:
 	input_pickable = false # Managed centrally by CampaignInputRouter
+	_ensure_child_nodes()
 	_update_collision_shape()
 	queue_redraw()
 
+func _ensure_child_nodes() -> void:
+	if collision_shape == null:
+		collision_shape = get_node_or_null("CollisionShape2D") as CollisionShape2D
+		if collision_shape == null:
+			collision_shape = CollisionShape2D.new()
+			var shape: CircleShape2D = CircleShape2D.new()
+			shape.radius = BASE_RADIUS
+			collision_shape.shape = shape
+			add_child(collision_shape)
+	if label == null:
+		label = get_node_or_null("Label") as Label
+		if label == null:
+			label = Label.new()
+			add_child(label)
+
 ## Ingests an immutable view-model snapshot and refreshes visuals.
 func update_view(vm: ProvinceViewModel) -> void:
+	_ensure_child_nodes()
 	view_model = vm
 	if vm != null:
 		province_id = vm.province_id

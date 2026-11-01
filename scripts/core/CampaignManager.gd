@@ -1,4 +1,4 @@
-﻿extends Node
+extends Node
 
 ## Signals for UI and World visualization
 signal province_selected(province_data: ProvinceData)
@@ -18,13 +18,17 @@ var army_nodes: Dictionary = {}       # army_id (String) -> Node
 
 var selected_province: ProvinceData = null
 var selected_army: ArmyData = null
+var selected_entity_id: String = ""
+var selected_entity_type: String = ""
 
 func _ready() -> void:
-	# Connect to TurnManager turn triggers if autoload exists
-	var turn_manager_node: Node = get_node_or_null("/root/TurnManager")
-	if turn_manager_node != null:
-		turn_manager_node.connect("turn_started", Callable(self, "_on_turn_started"))
-		turn_manager_node.connect("round_completed", Callable(self, "_on_round_completed"))
+	if is_inside_tree():
+		var turn_manager_node: Node = get_node_or_null("/root/TurnManager")
+		if turn_manager_node != null:
+			if turn_manager_node.has_signal("turn_started"):
+				turn_manager_node.turn_started.connect(_on_turn_started)
+			if turn_manager_node.has_signal("round_completed"):
+				turn_manager_node.round_completed.connect(_on_round_completed)
 
 ## Registers a province data container and optional scene node.
 func register_province(data: ProvinceData, node: Node = null) -> void:
@@ -51,35 +55,105 @@ func select_province_by_id(province_id: String) -> void:
 	select_province(target_province)
 
 func select_province(province_data: ProvinceData) -> void:
-	# If an army is already selected and player clicks an adjacent province, attempt movement
-	if selected_army != null:
-		var current_prov_id: String = selected_army.current_province_id
-		if current_prov_id != province_data.province_id:
-			var validation: Dictionary = validate_army_move(selected_army, province_data.province_id)
-			if validation["valid"]:
-				execute_army_move(selected_army, province_data.province_id)
-				return
-			else:
-				move_rejected.emit(validation["reason"])
-	
 	selected_army = null
 	selected_province = province_data
-	province_selected.emit(province_data)
+	if province_data != null:
+		selected_entity_id = province_data.province_id
+		selected_entity_type = "province"
+		province_selected.emit(province_data)
+	else:
+		selected_entity_id = ""
+		selected_entity_type = ""
+		selection_cleared.emit()
 
 ## Selects an army on the campaign map.
 func select_army(army_data: ArmyData) -> void:
 	selected_province = null
 	selected_army = army_data
 	if army_data != null:
+		selected_entity_id = army_data.army_id
+		selected_entity_type = "army"
 		army_selected.emit(army_data)
 	else:
+		selected_entity_id = ""
+		selected_entity_type = ""
 		selection_cleared.emit()
 
 ## Clears current campaign selection.
 func clear_selection() -> void:
 	selected_province = null
 	selected_army = null
+	selected_entity_id = ""
+	selected_entity_type = ""
 	selection_cleared.emit()
+
+## Updates tactical stance for a registered army.
+func set_army_stance(army_id: String, new_stance: ArmyData.Stance) -> bool:
+	for army: ArmyData in armies:
+		if army != null and army.army_id == army_id:
+			var success: bool = army.set_stance(new_stance)
+			if success and selected_army == army:
+				army_selected.emit(army)
+			return success
+	return false
+
+## Dispatches a touch tap at world coordinates through CampaignInputRouter.
+func handle_world_tap(tap_world_pos: Vector2) -> void:
+	# Check input gate if TurnManager exists
+	if is_inside_tree():
+		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
+		if turn_mgr != null and turn_mgr.has_method("can_accept_command"):
+			if not turn_mgr.can_accept_command():
+				return
+
+	var candidates: Array = []
+	for army: ArmyData in armies:
+		if army != null:
+			var army_pos: Vector2 = Vector2.ZERO
+			if provinces.has(army.current_province_id):
+				army_pos = provinces[army.current_province_id].map_position
+			candidates.append({
+				"id": army.army_id,
+				"type": "army",
+				"pos": army_pos,
+				"box_size": Vector2(52, 52)
+			})
+
+	for prov: ProvinceData in provinces.values():
+		if prov != null:
+			candidates.append({
+				"id": prov.province_id,
+				"type": "province",
+				"pos": prov.map_position,
+				"radius": 56.0
+			})
+
+	var pick: Dictionary = CampaignInputRouter.pick_candidate(tap_world_pos, candidates, selected_entity_id)
+	if not pick.get("hit", false):
+		clear_selection()
+		return
+
+	var hit_id: String = str(pick.get("id", ""))
+	var hit_type: String = str(pick.get("type", ""))
+
+	if hit_type == "army":
+		for a: ArmyData in armies:
+			if a != null and a.army_id == hit_id:
+				select_army(a)
+				return
+	elif hit_type == "province":
+		if provinces.has(hit_id):
+			var prov: ProvinceData = provinces[hit_id]
+			# If army selected and player clicks another province, attempt move
+			if selected_army != null and selected_army.current_province_id != hit_id:
+				var validation: Dictionary = validate_army_move(selected_army, hit_id)
+				if validation["valid"]:
+					execute_army_move(selected_army, hit_id)
+					return
+				else:
+					move_rejected.emit(validation["reason"])
+					return
+			select_province(prov)
 
 ## Validates whether an army can legally move to target province.
 func validate_army_move(army: ArmyData, target_province_id: String) -> Dictionary:
@@ -108,7 +182,7 @@ func validate_army_move(army: ArmyData, target_province_id: String) -> Dictionar
 	
 	return {"valid": true, "cost": ap_cost, "reason": "Move valid."}
 
-## Executes movement, consumes AP, and resolves hostile encounters if present.
+## Executes movement, consumes AP, and resolves encounters according to AutoResolveEngine.
 func execute_army_move(army: ArmyData, target_province_id: String) -> bool:
 	var validation: Dictionary = validate_army_move(army, target_province_id)
 	if not validation["valid"]:
@@ -128,8 +202,9 @@ func execute_army_move(army: ArmyData, target_province_id: String) -> bool:
 	
 	if hostile_army != null:
 		# Field battle against opposing army
-		var battle_result: BattleResult = AutoResolveCalculator.resolve_battle(army, hostile_army)
-		_apply_battle_outcome(battle_result, target_province)
+		var battle_result: BattleResult = AutoResolveEngine.resolve_battle(army, hostile_army, {"is_settlement_siege": false})
+		AutoResolveEngine.apply_battle_result(battle_result, army, hostile_army)
+		_handle_post_battle_armies(battle_result, target_province)
 		battle_triggered.emit(battle_result)
 		
 		if battle_result.attacker_won:
@@ -145,16 +220,23 @@ func execute_army_move(army: ArmyData, target_province_id: String) -> bool:
 			garrison_army.army_name = "%s Garrison" % target_province.province_name
 			garrison_army.owner_faction_id = target_province.owner_faction_id
 			garrison_army.units = target_province.garrison_units.duplicate()
-			garrison_army.general_leadership_rating = 0.8
-			garrison_army.stance = ArmyData.Stance.ENCAMP
+			garrison_army.general_command_stars = 1
+			garrison_army.stance = ArmyData.Stance.ENCAMPMENT
 
-			var battle_result: BattleResult = AutoResolveCalculator.resolve_battle(army, garrison_army)
-			_apply_battle_outcome(battle_result, target_province)
-			battle_triggered.emit(battle_result)
-
+			var battle_result: BattleResult = AutoResolveEngine.resolve_battle(
+				army, garrison_army, {
+					"is_settlement_siege": true,
+					"fortification_level": target_province.settlement_level
+				}
+			)
+			AutoResolveEngine.apply_battle_result(battle_result, army, garrison_army)
+			target_province.garrison_units = garrison_army.units.duplicate()
+			
 			if battle_result.attacker_won:
+				_transfer_province_ownership(target_province, army.owner_faction_id)
 				army.current_province_id = target_province_id
 				army_movement_completed.emit(army, target_province_id)
+			battle_triggered.emit(battle_result)
 			return true
 		else:
 			# Undefended settlement captured immediately
@@ -168,18 +250,11 @@ func execute_army_move(army: ArmyData, target_province_id: String) -> bool:
 		army_movement_completed.emit(army, target_province_id)
 		return true
 
-## Updates army units, casualties, and province control following battle resolution.
-func _apply_battle_outcome(result: BattleResult, contested_province: ProvinceData) -> void:
-	# Update attacker roster
-	result.attacker_army.units = result.attacker_survivors.duplicate()
+func _handle_post_battle_armies(result: BattleResult, contested_province: ProvinceData) -> void:
 	if result.attacker_army.units.is_empty():
 		_disband_army(result.attacker_army)
-	
-	# Update defender roster
-	result.defender_army.units = result.defender_survivors.duplicate()
 	if result.defender_army.units.is_empty():
 		_disband_army(result.defender_army)
-		# If defender was destroyed in its own settlement, attacker claims province
 		if result.attacker_won and contested_province.owner_faction_id != result.attacker_army.owner_faction_id:
 			_transfer_province_ownership(contested_province, result.attacker_army.owner_faction_id)
 
@@ -198,8 +273,7 @@ func _disband_army(army: ArmyData) -> void:
 			node.queue_free()
 		army_nodes.erase(army.army_id)
 	if selected_army == army:
-		selected_army = null
-		selection_cleared.emit()
+		clear_selection()
 
 func _find_hostile_army_in_province(province_id: String, my_faction_id: String) -> ArmyData:
 	for army: ArmyData in armies:
@@ -244,4 +318,3 @@ func _refresh_faction_economics(faction: FactionData) -> void:
 	
 	faction.total_income = total_inc
 	faction.total_upkeep = total_upk
-

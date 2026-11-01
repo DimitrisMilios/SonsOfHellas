@@ -28,6 +28,9 @@ func _init() -> void:
 	armies_container.name = "Armies"
 	add_child(armies_container)
 
+const PROVINCE_SCENE: PackedScene = preload("res://scenes/ProvinceNode.tscn")
+const ARMY_SCENE: PackedScene = preload("res://scenes/ArmyNode.tscn")
+
 ## Spawns or updates a passive ProvinceNode view.
 func spawn_province_node(data: ProvinceData, faction: FactionData = null) -> ProvinceNode:
 	if data == null:
@@ -37,7 +40,10 @@ func spawn_province_node(data: ProvinceData, faction: FactionData = null) -> Pro
 	if province_nodes.has(data.province_id):
 		node = province_nodes[data.province_id]
 	else:
-		node = ProvinceNode.new()
+		if PROVINCE_SCENE != null:
+			node = PROVINCE_SCENE.instantiate() as ProvinceNode
+		if node == null:
+			node = ProvinceNode.new()
 		node.name = data.province_id
 		province_nodes[data.province_id] = node
 		provinces_container.add_child(node)
@@ -56,7 +62,10 @@ func spawn_army_node(data: ArmyData, start_pos: Vector2) -> ArmyNode:
 	if army_nodes.has(data.army_id):
 		node = army_nodes[data.army_id]
 	else:
-		node = ArmyNode.new()
+		if ARMY_SCENE != null:
+			node = ARMY_SCENE.instantiate() as ArmyNode
+		if node == null:
+			node = ArmyNode.new()
 		node.name = data.army_id
 		node.position = start_pos
 		army_nodes[data.army_id] = node

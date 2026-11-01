@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/core/MainCampaign.gd" id="1_main"]
 [ext_resource type="Script" path="res://scripts/world/CampaignCamera.gd" id="2_camera"]
 [ext_resource type="PackedScene" path="res://scenes/UI/CampaignHUD.tscn" id="3_hud"]
-[ext_resource type="PackedScene" path="res://scenes/ProvinceNode.tscn" id="4_prov_scene"]
+[ext_resource type="Script" path="res://scripts/world/CampaignMapView.gd" id="4_mapview"]
 
 [node name="MainCampaign" type="Node2D"]
 script = ExtResource("1_main")
@@ -17,8 +17,7 @@ script = ExtResource("2_camera")
 
 [node name="Roads" type="Node2D" parent="World"]
 
-[node name="Provinces" type="Node2D" parent="World"]
-
-[node name="Armies" type="Node2D" parent="World"]
+[node name="CampaignMapView" type="Node2D" parent="World"]
+script = ExtResource("4_mapview")
 
 [node name="CampaignHUD" parent="." instance=ExtResource("3_hud")]

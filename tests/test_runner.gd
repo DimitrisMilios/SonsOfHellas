@@ -214,6 +214,26 @@ func _init() -> void:
 		print("  -> FAILED: TestCampaignHUD (%d errors)" % hud_failures.size())
 		for f: String in hud_failures:
 			print("     * " + f)
+
+	print("[RUNNING] TestCampaignManager...")
+	var cm_failures: Array[String] = TestCampaignManager.run_all_tests()
+	if cm_failures.is_empty():
+		print("  -> PASSED: TestCampaignManager")
+	else:
+		total_failures += cm_failures.size()
+		print("  -> FAILED: TestCampaignManager (%d errors)" % cm_failures.size())
+		for f: String in cm_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestSceneBootstrap...")
+	var sb_failures: Array[String] = TestSceneBootstrap.run_all_tests()
+	if sb_failures.is_empty():
+		print("  -> PASSED: TestSceneBootstrap")
+	else:
+		total_failures += sb_failures.size()
+		print("  -> FAILED: TestSceneBootstrap (%d errors)" % sb_failures.size())
+		for f: String in sb_failures:
+			print("     * " + f)
 			
 	print("\n------------------------------------------")
 	if total_failures == 0:
