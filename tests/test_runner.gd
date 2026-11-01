@@ -6,6 +6,7 @@ const TestProvinceData = preload("res://tests/test_province_data.gd")
 const TestFactionData = preload("res://tests/test_faction_data.gd")
 const TestArmyData = preload("res://tests/test_army_data.gd")
 const TestDataRegistry = preload("res://tests/test_data_registry.gd")
+const TestEconomyCalculator = preload("res://tests/test_economy_calculator.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -72,6 +73,16 @@ func _init() -> void:
 		total_failures += reg_failures.size()
 		print("  -> FAILED: TestDataRegistry (%d errors)" % reg_failures.size())
 		for f: String in reg_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestEconomyCalculator...")
+	var econ_failures: Array[String] = TestEconomyCalculator.run_all_tests()
+	if econ_failures.is_empty():
+		print("  -> PASSED: TestEconomyCalculator")
+	else:
+		total_failures += econ_failures.size()
+		print("  -> FAILED: TestEconomyCalculator (%d errors)" % econ_failures.size())
+		for f: String in econ_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")
