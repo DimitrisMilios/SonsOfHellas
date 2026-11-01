@@ -28,6 +28,7 @@ const TestVFXPool = preload("res://tests/test_vfx_pool.gd")
 const TestAudioManager = preload("res://tests/test_audio_manager.gd")
 const TestSaveResilience = preload("res://tests/test_save_resilience.gd")
 const TestTurnCommitReplay = preload("res://tests/test_turn_commit_replay.gd")
+const TestTitleScreen = preload("res://tests/test_title_screen.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -314,6 +315,16 @@ func _init() -> void:
 		total_failures += tcr_failures.size()
 		print("  -> FAILED: TestTurnCommitReplay (%d errors)" % tcr_failures.size())
 		for f: String in tcr_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestTitleScreen...")
+	var ts_failures: Array[String] = TestTitleScreen.run_all_tests()
+	if ts_failures.is_empty():
+		print("  -> PASSED: TestTitleScreen")
+	else:
+		total_failures += ts_failures.size()
+		print("  -> FAILED: TestTitleScreen (%d errors)" % ts_failures.size())
+		for f: String in ts_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")

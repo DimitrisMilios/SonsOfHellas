@@ -8,7 +8,7 @@ config_version=5
 
 config/name="Sons of Hellas"
 config/description="Turn-Based Grand Strategy Campaign Map for Mobile (Godot 4)"
-run/main_scene="res://scenes/MainCampaign.tscn"
+run/main_scene="res://scenes/TitleScreen.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 run/max_fps=60
 
@@ -30,7 +30,7 @@ window/size/viewport_height=720
 window/size/mode=0
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/handheld/orientation=5
+window/handheld/orientation=4
 
 [input_devices]
 
