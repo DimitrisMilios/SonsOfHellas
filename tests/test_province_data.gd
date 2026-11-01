@@ -8,6 +8,7 @@ static func run_all_tests() -> Array[String]:
 	_test_garrison_management(failures)
 	_test_consecutive_unrest_tracking(failures)
 	_test_province_serialization_round_trip(failures)
+	_test_under_construction_serialization_and_completion(failures)
 	return failures
 
 static func _test_settlement_level_slot_capacity(failures: Array[String]) -> void:
@@ -115,3 +116,40 @@ static func _test_province_serialization_round_trip(failures: Array[String]) -> 
 		failures.append("Restored region_wealth mismatch")
 	if restored.adjacent_province_ids != prov.adjacent_province_ids:
 		failures.append("Restored adjacent_province_ids mismatch")
+	if restored.garrison_units.size() != 1 or restored.garrison_units[0].unit_id != "unit_spartan_youth":
+		failures.append("Restored garrison_units mismatch")
+
+static func _test_under_construction_serialization_and_completion(failures: Array[String]) -> void:
+	var prov: ProvinceData = ProvinceData.new()
+	prov.set_settlement_level(1)
+	
+	var target_bld: BuildingData = BuildingData.new()
+	target_bld.building_id = "bld_athenian_port"
+	target_bld.turns_to_build = 2
+	
+	prov.building_slots[0].queue_construction(target_bld)
+	
+	var dict: Dictionary = prov.to_dict()
+	var restored: ProvinceData = ProvinceData.from_dict(dict)
+	
+	var restored_slot: BuildingSlotData = restored.building_slots[0]
+	if not restored_slot.is_under_construction:
+		failures.append("Expected restored slot to be under construction")
+	if restored_slot.target_building_to_construct == null:
+		failures.append("Expected target_building_to_construct to be populated, got null")
+	elif restored_slot.target_building_to_construct.building_id != "bld_athenian_port":
+		failures.append("Expected target_building_to_construct id to be bld_athenian_port, got: " + restored_slot.target_building_to_construct.building_id)
+	if restored_slot.building_data != null:
+		failures.append("Expected building_data to be null while under construction")
+		
+	# Advance 2 turns
+	var turn1_done: bool = restored_slot.advance_construction()
+	if turn1_done:
+		failures.append("Turn 1 advance should not complete construction (turns_to_build=2)")
+	var turn2_done: bool = restored_slot.advance_construction()
+	if not turn2_done:
+		failures.append("Turn 2 advance should complete construction")
+	if restored_slot.is_under_construction:
+		failures.append("Slot should not be under construction after completion")
+	if restored_slot.building_data == null or restored_slot.building_data.building_id != "bld_athenian_port":
+		failures.append("Finished building_data should be bld_athenian_port, got: " + str(restored_slot.building_data))

@@ -254,7 +254,21 @@ static func from_dict(dict: Dictionary) -> ProvinceData:
 				if bld_id != null and str(bld_id) != "":
 					var bld: BuildingData = BuildingData.new()
 					bld.building_id = str(bld_id)
-					slot.building_data = bld
+					if slot.is_under_construction:
+						slot.target_building_to_construct = bld
+					else:
+						slot.building_data = bld
 				prov.building_slots.append(slot)
 				
+	var garrisons_raw: Array = dict.get("active_garrison_array", [])
+	prov.garrison_units.clear()
+	for g_dict: Variant in garrisons_raw:
+		if g_dict is Dictionary:
+			var unit: UnitData = UnitData.new()
+			unit.unit_id = str(g_dict.get("unit_card_id", ""))
+			unit.unit_count = int(g_dict.get("current_unit_count", 0))
+			unit.veterancy_rank = int(g_dict.get("experience_chevrons", 0))
+			unit.is_building_garrison = bool(g_dict.get("is_building_garrison", false))
+			prov.garrison_units.append(unit)
+			
 	return prov
