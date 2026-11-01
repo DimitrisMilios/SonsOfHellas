@@ -29,9 +29,11 @@ func _ready() -> void:
 	# Setup stance options
 	if stance_option_button != null:
 		stance_option_button.clear()
-		stance_option_button.add_item("Default", ArmyData.Stance.DEFAULT)
+		stance_option_button.add_item("Normal", ArmyData.Stance.NORMAL)
 		stance_option_button.add_item("Forced March", ArmyData.Stance.FORCED_MARCH)
-		stance_option_button.add_item("Encamp", ArmyData.Stance.ENCAMP)
+		stance_option_button.add_item("Raiding", ArmyData.Stance.RAIDING)
+		stance_option_button.add_item("Encampment", ArmyData.Stance.ENCAMPMENT)
+		stance_option_button.add_item("Ambush", ArmyData.Stance.AMBUSH)
 		stance_option_button.add_item("Siege", ArmyData.Stance.SIEGE)
 		stance_option_button.item_selected.connect(_on_stance_selected)
 
@@ -158,7 +160,7 @@ func _on_army_selected(army: ArmyData) -> void:
 	var unit_summary: String = ""
 	for u: UnitData in army.units:
 		if u != null:
-			unit_summary += "\n â€¢ %s (T%d, Str: %.0f, Arm: %.0f)" % [u.display_name, u.tier, u.base_strength, u.armor]
+			unit_summary += "\n - %s (T%d, Str: %.0f, Arm: %d)" % [u.display_name, u.tier, u.get_combat_value(), u.armor]
 
 	details_label.text = """Owner: %s
 Stationed in: %s
