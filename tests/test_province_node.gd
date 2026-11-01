@@ -23,14 +23,9 @@ static func test_touch_target_dimensions(failures: Array[String]) -> void:
 	var node: ProvinceNode = scene.instantiate() as ProvinceNode
 	node._ready()
 	
-	_assert(node.collision_shape != null, "CollisionShape2D must be present", failures)
-	if node.collision_shape != null and node.collision_shape.shape is CircleShape2D:
-		var circle: CircleShape2D = node.collision_shape.shape as CircleShape2D
-		var diameter: float = circle.radius * 2.0
-		_assert(diameter >= 44.0, 
-			"CollisionShape2D touch target diameter must be >= 44px, got: %f" % diameter, failures)
-	else:
-		failures.append("CollisionShape2D shape must be a CircleShape2D")
+	var diameter: float = node.effective_touch_radius * 2.0
+	_assert(diameter >= 44.0, 
+		"ProvinceNode touch target diameter must be >= 44px, got: %f" % diameter, failures)
 		
 	node.free()
 

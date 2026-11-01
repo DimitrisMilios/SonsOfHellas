@@ -1,15 +1,9 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=2 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/ProvinceNode.gd" id="1_prov_node"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
-radius = 48.0
-
-[node name="ProvinceNode" type="Area2D"]
+[node name="ProvinceNode" type="Node2D"]
 script = ExtResource("1_prov_node")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_1")
 
 [node name="Label" type="Label" parent="."]
 anchors_preset = 8

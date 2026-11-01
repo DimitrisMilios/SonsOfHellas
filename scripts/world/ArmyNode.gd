@@ -1,5 +1,5 @@
 class_name ArmyNode
-extends Area2D
+extends Node2D
 
 const BASE_BOX_SIZE: Vector2 = Vector2(52.0, 52.0)
 const BASE_MOVEMENT_RADIUS: float = 120.0
@@ -17,8 +17,6 @@ const ZOC_RADIUS: float = 64.0
 			update_view(vm)
 
 var view_model: ArmyViewModel = null
-
-var collision_shape: CollisionShape2D = null
 var label: Label = null
 
 var is_hovered: bool = false
@@ -28,22 +26,16 @@ var effective_box_size: Vector2 = BASE_BOX_SIZE
 var active_tween: Tween = null
 
 func _ready() -> void:
-	input_pickable = false # Managed centrally by CampaignInputRouter
+	set_process(false)
 	_ensure_child_nodes()
-	_update_collision_shape()
 	queue_redraw()
 
 func _ensure_child_nodes() -> void:
-	if collision_shape == null:
-		collision_shape = get_node_or_null("CollisionShape2D") as CollisionShape2D
-		if collision_shape == null:
-			collision_shape = CollisionShape2D.new()
-			var shape: RectangleShape2D = RectangleShape2D.new()
-			shape.size = BASE_BOX_SIZE
-			collision_shape.shape = shape
-			add_child(collision_shape)
 	if label == null:
 		label = get_node_or_null("Label") as Label
+		if label == null:
+			label = Label.new()
+			add_child(label)
 		if label == null:
 			label = Label.new()
 			add_child(label)
@@ -122,7 +114,6 @@ func get_zoc_radius() -> float:
 ## Recomputes touch hit-target box size on camera zoom change.
 func set_zoom(zoom_x: float) -> void:
 	effective_box_size = CampaignInputRouter.calculate_effective_box_size(BASE_BOX_SIZE, zoom_x)
-	_update_collision_shape()
 
 func set_selected(selected: bool) -> void:
 	is_selected = selected
@@ -131,14 +122,6 @@ func set_selected(selected: bool) -> void:
 func set_hovered(hovered: bool) -> void:
 	is_hovered = hovered
 	queue_redraw()
-
-func _update_collision_shape() -> void:
-	if collision_shape != null:
-		var rect_shape: RectangleShape2D = collision_shape.shape as RectangleShape2D
-		if rect_shape == null:
-			rect_shape = RectangleShape2D.new()
-			collision_shape.shape = rect_shape
-		rect_shape.size = effective_box_size
 
 ## Animates movement to destination and updates state safely.
 func animate_move_to(destination: Vector2, duration: float = 0.45) -> Tween:

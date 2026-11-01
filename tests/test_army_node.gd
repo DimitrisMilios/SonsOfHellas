@@ -23,13 +23,8 @@ static func test_touch_target_dimensions(failures: Array[String]) -> void:
 	var node: ArmyNode = scene.instantiate() as ArmyNode
 	node._ready()
 	
-	_assert(node.collision_shape != null, "CollisionShape2D must be present", failures)
-	if node.collision_shape != null and node.collision_shape.shape is RectangleShape2D:
-		var rect: RectangleShape2D = node.collision_shape.shape as RectangleShape2D
-		_assert(rect.size.x >= 44.0 and rect.size.y >= 44.0,
-			"CollisionShape2D touch target must be >= 44x44px, got: %v" % rect.size, failures)
-	else:
-		failures.append("CollisionShape2D shape must be a RectangleShape2D")
+	_assert(node.effective_box_size.x >= 44.0 and node.effective_box_size.y >= 44.0,
+		"ArmyNode touch target must be >= 44x44px, got: %v" % node.effective_box_size, failures)
 		
 	node.free()
 

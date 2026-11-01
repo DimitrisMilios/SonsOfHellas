@@ -1,5 +1,5 @@
 class_name ProvinceNode
-extends Area2D
+extends Node2D
 
 const BASE_RADIUS: float = 56.0
 
@@ -23,8 +23,6 @@ const TIER_NAMES: Dictionary = {
 			update_view(vm)
 
 var view_model: ProvinceViewModel = null
-
-var collision_shape: CollisionShape2D = null
 var label: Label = null
 
 var is_hovered: bool = false
@@ -32,22 +30,16 @@ var is_selected: bool = false
 var effective_touch_radius: float = BASE_RADIUS
 
 func _ready() -> void:
-	input_pickable = false # Managed centrally by CampaignInputRouter
+	set_process(false)
 	_ensure_child_nodes()
-	_update_collision_shape()
 	queue_redraw()
 
 func _ensure_child_nodes() -> void:
-	if collision_shape == null:
-		collision_shape = get_node_or_null("CollisionShape2D") as CollisionShape2D
-		if collision_shape == null:
-			collision_shape = CollisionShape2D.new()
-			var shape: CircleShape2D = CircleShape2D.new()
-			shape.radius = BASE_RADIUS
-			collision_shape.shape = shape
-			add_child(collision_shape)
 	if label == null:
 		label = get_node_or_null("Label") as Label
+		if label == null:
+			label = Label.new()
+			add_child(label)
 		if label == null:
 			label = Label.new()
 			add_child(label)
@@ -106,7 +98,6 @@ func get_faction_color() -> Color:
 ## Recomputes touch hit-target radius on camera zoom change.
 func set_zoom(zoom_x: float) -> void:
 	effective_touch_radius = CampaignInputRouter.calculate_effective_world_radius(BASE_RADIUS, zoom_x)
-	_update_collision_shape()
 
 func set_selected(selected: bool) -> void:
 	is_selected = selected
@@ -115,14 +106,6 @@ func set_selected(selected: bool) -> void:
 func set_hovered(hovered: bool) -> void:
 	is_hovered = hovered
 	queue_redraw()
-
-func _update_collision_shape() -> void:
-	if collision_shape != null:
-		var circle: CircleShape2D = collision_shape.shape as CircleShape2D
-		if circle == null:
-			circle = CircleShape2D.new()
-			collision_shape.shape = circle
-		circle.radius = effective_touch_radius
 
 func _draw() -> void:
 	var tier: int = get_settlement_tier()
