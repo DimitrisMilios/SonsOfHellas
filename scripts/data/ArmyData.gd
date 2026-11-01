@@ -2,37 +2,49 @@ class_name ArmyData
 extends Resource
 
 enum Stance {
-	DEFAULT,
-	FORCED_MARCH,
-	ENCAMP,
-	SIEGE
+	NORMAL = 0,
+	FORCED_MARCH = 1,
+	RAIDING = 2,
+	ENCAMPMENT = 3,
+	AMBUSH = 4,
+	SIEGE = 5,
+	DEFAULT = 0, # Legacy compatibility
+	ENCAMP = 3   # Legacy compatibility
 }
 
 @export_group("Identity")
 @export var army_id: String = ""
-@export var army_name: String = "Spartan Cohort"
+@export var army_name: String = "Greek Cohort"
 @export var owner_faction_id: String = ""
 @export var current_province_id: String = ""
 
-@export_group("Command & Composition")
-@export_range(0.5, 3.0, 0.1) var general_leadership_rating: float = 1.0
-@export var units: Array[UnitData] = []
+@export_group("Command & Leadership")
+@export var general_name: String = "General"
+@export_range(0, 10, 1) var general_command_stars: int = 1
+@export_range(0.0, 1.0, 0.01) var general_traits_bonus: float = 0.0
+@export_range(0.5, 3.0, 0.1) var general_leadership_rating: float = 1.0 # Legacy compatibility
 
 @export_group("Campaign Movement")
-@export_range(0.0, 100.0, 1.0) var current_action_points: float = 100.0
-@export_range(0.0, 100.0, 1.0) var max_action_points: float = 100.0
-@export var stance: Stance = Stance.DEFAULT
+@export_range(0.0, 200.0, 1.0) var current_action_points: float = 100.0
+@export_range(0.0, 200.0, 1.0) var max_action_points: float = 100.0
+@export var stance: Stance = Stance.NORMAL
+@export var has_retreated_this_turn: bool = false
 
-## Action Point movement cost under default conditions.
+@export_group("Roster")
+@export var units: Array[UnitData] = []
+
 const BASE_MOVEMENT_AP_COST: float = 40.0
 
-## Calculates total army upkeep per turn.
+## Calculates total army upkeep per turn, halving costs under Raiding stance.
 func calculate_total_upkeep() -> int:
-	var total_upkeep: int = 0
+	var total: int = 0
 	for unit: UnitData in units:
 		if unit != null:
-			total_upkeep += unit.turn_upkeep
-	return total_upkeep
+			total += unit.upkeep_cost if unit.upkeep_cost > 0 else unit.turn_upkeep
+	
+	if stance == Stance.RAIDING:
+		total = roundi(float(total) * 0.50)
+	return total
 
 ## Calculates sum of base combat values of all active units.
 func calculate_total_strength() -> float:
@@ -45,33 +57,47 @@ func calculate_total_strength() -> float:
 ## Consumes action points if sufficient AP is available.
 func consume_action_points(amount: float) -> bool:
 	if current_action_points >= amount:
-		current_action_points = clampf(current_action_points - amount, 0.0, max_action_points)
+		current_action_points = maxf(current_action_points - amount, 0.0)
 		return true
 	return false
 
-## Resets action points at the start of faction turn.
+## Resets action points at the start of faction turn and clears turn retreat flags.
 func reset_action_points() -> void:
+	has_retreated_this_turn = false
 	if stance == Stance.FORCED_MARCH:
 		current_action_points = max_action_points * 1.5
+	elif stance == Stance.RAIDING:
+		current_action_points = max_action_points * 0.5
 	else:
 		current_action_points = max_action_points
 
-## Changes tactical stance with validity checks.
-func set_stance(new_stance: Stance) -> void:
-	stance = new_stance
+## Changes tactical stance with validity checks according to movement_stances.md.
+func set_stance(new_stance: Stance) -> bool:
+	if new_stance == Stance.RAIDING:
+		# Activation condition: AP spent <= 50% max AP (i.e. remaining AP >= 50% max AP)
+		if current_action_points < (0.50 * max_action_points):
+			return false
+		# Raiding stance activation costs 50% max AP
+		current_action_points = maxf(0.0, current_action_points - (0.50 * max_action_points))
+		stance = Stance.RAIDING
+		return true
+	elif new_stance == Stance.FORCED_MARCH:
+		if stance != Stance.FORCED_MARCH:
+			current_action_points += (0.50 * max_action_points)
+		stance = Stance.FORCED_MARCH
+		return true
+	else:
+		stance = new_stance
+		return true
 
-func get_stance_name() -> String:
-	match stance:
-		Stance.DEFAULT:
-			return "Default"
-		Stance.FORCED_MARCH:
-			return "Forced March"
-		Stance.ENCAMP:
-			return "Encamp"
-		Stance.SIEGE:
-			return "Siege"
-		_:
-			return "Unknown"
+## Marks army as having retreated this turn and expends all remaining AP.
+## Rule: Cannot retreat twice in a single turn (returns false on second attempt).
+func mark_retreated() -> bool:
+	if has_retreated_this_turn:
+		return false
+	has_retreated_this_turn = true
+	current_action_points = 0.0
+	return true
 
 func add_unit(unit: UnitData) -> void:
 	if unit != null:
@@ -80,3 +106,100 @@ func add_unit(unit: UnitData) -> void:
 func remove_unit_at(index: int) -> void:
 	if index >= 0 and index < units.size():
 		units.remove_at(index)
+
+## Creates an isolated deep clone of this army with independent unit instances.
+func clone() -> ArmyData:
+	var copy: ArmyData = ArmyData.new()
+	copy.army_id = army_id
+	copy.army_name = army_name
+	copy.owner_faction_id = owner_faction_id
+	copy.current_province_id = current_province_id
+	copy.general_name = general_name
+	copy.general_command_stars = general_command_stars
+	copy.general_traits_bonus = general_traits_bonus
+	copy.general_leadership_rating = general_leadership_rating
+	copy.current_action_points = current_action_points
+	copy.max_action_points = max_action_points
+	copy.stance = stance
+	copy.has_retreated_this_turn = has_retreated_this_turn
+	
+	copy.units.clear()
+	for u: UnitData in units:
+		if u != null:
+			copy.units.append(u.clone())
+	return copy
+
+## Serializes army to dictionary.
+func to_dict() -> Dictionary:
+	var unit_dicts: Array[Dictionary] = []
+	for u: UnitData in units:
+		if u != null:
+			unit_dicts.append(u.to_dict())
+			
+	return {
+		"army_id": army_id,
+		"army_name": army_name,
+		"owner_faction_id": owner_faction_id,
+		"current_province_id": current_province_id,
+		"general_name": general_name,
+		"general_command_stars": general_command_stars,
+		"general_traits_bonus": general_traits_bonus,
+		"current_action_points": current_action_points,
+		"max_action_points": max_action_points,
+		"stance": stance_to_string(stance),
+		"has_retreated_this_turn": has_retreated_this_turn,
+		"units": unit_dicts
+	}
+
+## Deserializes dictionary to ArmyData instance.
+static func from_dict(dict: Dictionary) -> ArmyData:
+	var army: ArmyData = ArmyData.new()
+	army.army_id = dict.get("army_id", "")
+	army.army_name = dict.get("army_name", "Greek Cohort")
+	army.owner_faction_id = dict.get("owner_faction_id", "")
+	army.current_province_id = dict.get("current_province_id", "")
+	army.general_name = dict.get("general_name", "General")
+	army.general_command_stars = dict.get("general_command_stars", 1)
+	army.general_traits_bonus = float(dict.get("general_traits_bonus", 0.0))
+	army.current_action_points = float(dict.get("current_action_points", 100.0))
+	army.max_action_points = float(dict.get("max_action_points", 100.0))
+	army.stance = string_to_stance(dict.get("stance", "NORMAL"))
+	army.has_retreated_this_turn = dict.get("has_retreated_this_turn", false)
+	
+	var units_raw: Array = dict.get("units", [])
+	army.units.clear()
+	for u_dict: Variant in units_raw:
+		if u_dict is Dictionary:
+			army.units.append(UnitData.from_dict(u_dict))
+			
+	return army
+
+static func stance_to_string(st: Stance) -> String:
+	match st:
+		Stance.NORMAL: return "NORMAL"
+		Stance.FORCED_MARCH: return "FORCED_MARCH"
+		Stance.RAIDING: return "RAIDING"
+		Stance.ENCAMPMENT: return "ENCAMPMENT"
+		Stance.AMBUSH: return "AMBUSH"
+		Stance.SIEGE: return "SIEGE"
+		_: return "NORMAL"
+
+static func string_to_stance(s: String) -> Stance:
+	match s:
+		"NORMAL", "DEFAULT": return Stance.NORMAL
+		"FORCED_MARCH": return Stance.FORCED_MARCH
+		"RAIDING": return Stance.RAIDING
+		"ENCAMPMENT", "ENCAMP": return Stance.ENCAMPMENT
+		"AMBUSH": return Stance.AMBUSH
+		"SIEGE": return Stance.SIEGE
+		_: return Stance.NORMAL
+
+func get_stance_name() -> String:
+	match stance:
+		Stance.NORMAL: return "Normal"
+		Stance.FORCED_MARCH: return "Forced March"
+		Stance.RAIDING: return "Raiding"
+		Stance.ENCAMPMENT: return "Encampment"
+		Stance.AMBUSH: return "Ambush"
+		Stance.SIEGE: return "Siege"
+		_: return "Normal"
