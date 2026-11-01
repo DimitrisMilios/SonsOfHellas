@@ -9,6 +9,7 @@ static func run_all_tests() -> Array[String]:
 	test_map_view_safe_removal(failures)
 	test_map_view_state_reconciliation(failures)
 	test_zoom_reactive_touch_bounds(failures)
+	test_map_view_vfx_pool(failures)
 	
 	return failures
 
@@ -126,4 +127,10 @@ static func test_zoom_reactive_touch_bounds(failures: Array[String]) -> void:
 	var c_zoom04: Array[Dictionary] = map_view.get_touch_candidates(0.4)
 	_assert(c_zoom04[0]["radius"] >= 60.0, "At zoom 0.4, candidate radius should scale to >= 60.0", failures)
 	
+	map_view.free()
+
+static func test_map_view_vfx_pool(failures: Array[String]) -> void:
+	var map_view: CampaignMapView = CampaignMapView.new()
+	_assert(map_view.vfx_pool != null, "CampaignMapView must initialize a VFXPool instance", failures)
+	_assert(map_view.has_method("play_vfx"), "CampaignMapView must expose play_vfx method", failures)
 	map_view.free()

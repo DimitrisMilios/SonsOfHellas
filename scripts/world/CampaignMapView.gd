@@ -14,6 +14,7 @@ var current_zoom_x: float = 1.0
 var provinces_container: Node2D = null
 var armies_container: Node2D = null
 var roads_container: Node2D = null
+var vfx_pool: VFXPool = null
 
 func _init() -> void:
 	roads_container = Node2D.new()
@@ -27,6 +28,16 @@ func _init() -> void:
 	armies_container = Node2D.new()
 	armies_container.name = "Armies"
 	add_child(armies_container)
+
+	vfx_pool = VFXPool.new()
+	vfx_pool.name = "VFXPool"
+	add_child(vfx_pool)
+
+## Convenience method to trigger cosmetic VFX from the pool.
+func play_vfx(effect_type: String, world_pos: Vector2, visible_rect: Rect2 = Rect2()) -> bool:
+	if vfx_pool == null:
+		return false
+	return vfx_pool.play_effect(effect_type, world_pos, current_zoom_x, visible_rect)
 
 const PROVINCE_SCENE: PackedScene = preload("res://scenes/ProvinceNode.tscn")
 const ARMY_SCENE: PackedScene = preload("res://scenes/ArmyNode.tscn")
