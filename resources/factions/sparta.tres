@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="FactionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/FactionData.gd" id="1_faction"]
+
+[resource]
+script = ExtResource("1_faction")
+faction_id = "sparta"
+faction_name = "Sparta"
+faction_color = Color(0.8, 0.15, 0.15, 1)
+is_player = true
+treasury = 1500
+total_income = 0
+total_upkeep = 0

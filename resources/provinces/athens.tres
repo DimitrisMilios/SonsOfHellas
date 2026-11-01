@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ProvinceData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ProvinceData.gd" id="1_prov"]
+[ext_resource type="Resource" path="res://resources/buildings/agora.tres" id="2_agora"]
+[ext_resource type="Resource" path="res://resources/buildings/temple_of_athena.tres" id="3_temple"]
+[ext_resource type="Resource" path="res://resources/units/athenian_hoplites.tres" id="4_hoplite"]
+
+[resource]
+script = ExtResource("1_prov")
+province_id = "athens"
+province_name = "Athens"
+owner_faction_id = "athens"
+settlement_tier = 3
+public_order = 90.0
+public_order_trend = 2.0
+base_tax = 220.0
+growth_rate = 7.0
+current_population = 22000
+max_building_slots = 4
+building_slots = [ExtResource("2_agora"), ExtResource("3_temple")]
+garrison_units = [ExtResource("4_hoplite"), ExtResource("4_hoplite")]
+adjacent_province_ids = ["corinth", "thebes"]
+map_position = Vector2(980, 460)

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ArmyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ArmyData.gd" id="1_army"]
+[ext_resource type="Resource" path="res://resources/units/spartan_hoplites.tres" id="2_hoplite"]
+[ext_resource type="Resource" path="res://resources/units/cretan_archers.tres" id="3_archer"]
+[ext_resource type="Resource" path="res://resources/units/thracian_peltasts.tres" id="4_peltast"]
+
+[resource]
+script = ExtResource("1_army")
+army_id = "spartan_1st_legion"
+army_name = "Leonidas' Vanguard"
+owner_faction_id = "sparta"
+current_province_id = "sparta"
+general_leadership_rating = 1.4
+units = [ExtResource("2_hoplite"), ExtResource("2_hoplite"), ExtResource("3_archer"), ExtResource("4_peltast")]
+current_action_points = 100.0
+max_action_points = 100.0
+stance = 0

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/UnitData.gd" id="1_unit"]
+
+[resource]
+script = ExtResource("1_unit")
+unit_id = "spartan_hoplites"
+display_name = "Spartan Hoplites"
+tier = 4
+role = 0
+base_strength = 180.0
+armor = 45.0
+recruitment_cost = 450
+turn_upkeep = 65

@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ArmyData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ArmyData.gd" id="1_army"]
+[ext_resource type="Resource" path="res://resources/units/athenian_hoplites.tres" id="2_hoplite"]
+[ext_resource type="Resource" path="res://resources/units/thessalian_cavalry.tres" id="3_cav"]
+[ext_resource type="Resource" path="res://resources/units/cretan_archers.tres" id="4_archer"]
+
+[resource]
+script = ExtResource("1_army")
+army_id = "athenian_1st_expedition"
+army_name = "Pericles' Phalanx"
+owner_faction_id = "athens"
+current_province_id = "athens"
+general_leadership_rating = 1.1
+units = [ExtResource("2_hoplite"), ExtResource("2_hoplite"), ExtResource("3_cav"), ExtResource("4_archer")]
+current_action_points = 100.0
+max_action_points = 100.0
+stance = 0

@@ -1,0 +1,24 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/core/MainCampaign.gd" id="1_main"]
+[ext_resource type="Script" path="res://scripts/world/CampaignCamera.gd" id="2_camera"]
+[ext_resource type="PackedScene" path="res://scenes/UI/CampaignHUD.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ProvinceNode.tscn" id="4_prov_scene"]
+
+[node name="MainCampaign" type="Node2D"]
+script = ExtResource("1_main")
+
+[node name="CampaignCamera" type="Camera2D" parent="."]
+position = Vector2(650, 480)
+zoom = Vector2(0.95, 0.95)
+script = ExtResource("2_camera")
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Roads" type="Node2D" parent="World"]
+
+[node name="Provinces" type="Node2D" parent="World"]
+
+[node name="Armies" type="Node2D" parent="World"]
+
+[node name="CampaignHUD" parent="." instance=ExtResource("3_hud")]

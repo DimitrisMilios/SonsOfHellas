@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/BuildingData.gd" id="1_building"]
+
+[resource]
+script = ExtResource("1_building")
+building_id = "temple_of_athena"
+display_name = "Temple of Athena"
+tier = 3
+category = 0
+build_cost = 500
+build_time_turns = 3
+tax_bonus = 15.0
+growth_bonus = 3.0
+public_order_bonus = 8.0
+unlocked_units = []

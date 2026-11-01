@@ -1,0 +1,122 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/CampaignHUD.gd" id="1_hud"]
+
+[node name="CampaignHUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="TopBar" type="PanelContainer" parent="."]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 50.0
+grow_horizontal = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="TopBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 8
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TopBar/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="GameTitle" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "SONS OF HELLAS"
+
+[node name="TurnLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Turn 1"
+
+[node name="FactionLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Active: Sparta (Player)"
+
+[node name="TreasuryLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Treasury: 1500 Gold"
+
+[node name="Spacer" type="Control" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EndTurnButton" type="Button" parent="TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(140, 36)
+layout_mode = 2
+text = "End Turn"
+
+[node name="SelectionPanel" type="PanelContainer" parent="."]
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -340.0
+offset_top = 60.0
+offset_right = -15.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="SelectionPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SelectionPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="SelectionPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Province Name"
+
+[node name="HSeparator" type="HSeparator" parent="SelectionPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StanceContainer" type="HBoxContainer" parent="SelectionPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StanceLabel" type="Label" parent="SelectionPanel/MarginContainer/VBoxContainer/StanceContainer"]
+layout_mode = 2
+text = "Tactical Stance: "
+
+[node name="StanceOptionButton" type="OptionButton" parent="SelectionPanel/MarginContainer/VBoxContainer/StanceContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DetailsLabel" type="Label" parent="SelectionPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+text = "Details go here..."
+autowrap_mode = 2
+
+[node name="NotificationLabel" type="Label" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = -80.0
+offset_right = 250.0
+offset_bottom = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "Notification Message"
+horizontal_alignment = 1
+
+[node name="BattleDialog" type="AcceptDialog" parent="."]
+title = "Battle Resolved"
+size = Vector2i(540, 300)
+ok_button_text = "Confirm"

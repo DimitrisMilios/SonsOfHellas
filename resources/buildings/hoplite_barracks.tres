@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/BuildingData.gd" id="1_building"]
+[ext_resource type="Resource" path="res://resources/units/spartan_hoplites.tres" id="2_hoplites"]
+
+[resource]
+script = ExtResource("1_building")
+building_id = "hoplite_barracks"
+display_name = "Hoplite Barracks"
+tier = 2
+category = 2
+build_cost = 400
+build_time_turns = 3
+tax_bonus = -20.0
+growth_bonus = 0.0
+public_order_bonus = 3.0
+unlocked_units = [ExtResource("2_hoplites")]

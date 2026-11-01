@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/BuildingData.gd" id="1_building"]
+
+[resource]
+script = ExtResource("1_building")
+building_id = "agora"
+display_name = "Grand Agora"
+tier = 2
+category = 1
+build_cost = 350
+build_time_turns = 2
+tax_bonus = 60.0
+growth_bonus = 4.0
+public_order_bonus = 2.0
+unlocked_units = []
