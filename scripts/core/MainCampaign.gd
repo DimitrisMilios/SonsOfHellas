@@ -162,13 +162,20 @@ func _dispatch_tap(screen_pos: Vector2) -> void:
 	if camera == null:
 		return
 	var world_pos: Vector2 = camera.screen_to_world(screen_pos)
+	var candidates: Array = []
+	if map_view != null:
+		candidates = map_view.get_touch_candidates(camera.zoom.x)
 	var campaign_mgr: Node = get_node_or_null("/root/CampaignManager")
 	if campaign_mgr != null and campaign_mgr.has_method("handle_world_tap"):
-		campaign_mgr.handle_world_tap(world_pos)
+		campaign_mgr.handle_world_tap(world_pos, candidates, camera.zoom.x)
 
 func _draw_road_connections() -> void:
 	if roads_container == null:
 		return
+	
+	var existing: Node = roads_container.get_node_or_null("RoadLinesDrawer")
+	if existing != null:
+		existing.queue_free()
 	
 	var drawer: Node2D = Node2D.new()
 	drawer.name = "RoadLinesDrawer"

@@ -41,6 +41,15 @@ static func test_hud_controls_touch_dimensions(failures: Array[String]) -> void:
 		_assert(end_btn.custom_minimum_size.x >= 44.0,
 			"EndTurnButton width must be >= 44px, got: %f" % end_btn.custom_minimum_size.x, failures)
 	
+	# Verify BattleDialog OK button adheres to >= 44x44px rule
+	if hud.battle_dialog != null:
+		var ok_btn: Button = hud.battle_dialog.get_ok_button()
+		if ok_btn != null:
+			_assert(ok_btn.custom_minimum_size.y >= 44.0, 
+				"BattleDialog OK button height must be >= 44px, got: %f" % ok_btn.custom_minimum_size.y, failures)
+			_assert(ok_btn.custom_minimum_size.x >= 44.0, 
+				"BattleDialog OK button width must be >= 44px, got: %f" % ok_btn.custom_minimum_size.x, failures)
+	
 	hud.free()
 
 static func test_season_year_formatting(failures: Array[String]) -> void:

@@ -64,6 +64,10 @@ func _ensure_references() -> void:
 		notification_label = get_node_or_null("SafeAreaContainer/HUDLayout/NotificationLabel") as Label
 	if battle_dialog == null:
 		battle_dialog = get_node_or_null("BattleDialog") as AcceptDialog
+	if battle_dialog != null:
+		var ok_btn: Button = battle_dialog.get_ok_button()
+		if ok_btn != null:
+			ok_btn.custom_minimum_size = Vector2(120, 48)
 
 func _ready() -> void:
 	_ensure_references()

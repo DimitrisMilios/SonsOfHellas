@@ -98,7 +98,7 @@ func set_army_stance(army_id: String, new_stance: ArmyData.Stance) -> bool:
 	return false
 
 ## Dispatches a touch tap at world coordinates through CampaignInputRouter.
-func handle_world_tap(tap_world_pos: Vector2) -> void:
+func handle_world_tap(tap_world_pos: Vector2, custom_candidates: Array = [], zoom_x: float = 1.0) -> void:
 	# Check input gate if TurnManager exists
 	if is_inside_tree():
 		var turn_mgr: Node = get_node_or_null("/root/TurnManager")
@@ -107,26 +107,31 @@ func handle_world_tap(tap_world_pos: Vector2) -> void:
 				return
 
 	var candidates: Array = []
-	for army: ArmyData in armies:
-		if army != null:
-			var army_pos: Vector2 = Vector2.ZERO
-			if provinces.has(army.current_province_id):
-				army_pos = provinces[army.current_province_id].map_position
-			candidates.append({
-				"id": army.army_id,
-				"type": "army",
-				"pos": army_pos,
-				"box_size": Vector2(52, 52)
-			})
+	if not custom_candidates.is_empty():
+		candidates = custom_candidates
+	else:
+		for army: ArmyData in armies:
+			if army != null:
+				var army_pos: Vector2 = Vector2.ZERO
+				if provinces.has(army.current_province_id):
+					army_pos = provinces[army.current_province_id].map_position
+				var eff_box: Vector2 = CampaignInputRouter.calculate_effective_box_size(Vector2(52, 52), zoom_x)
+				candidates.append({
+					"id": army.army_id,
+					"type": "army",
+					"pos": army_pos,
+					"box_size": eff_box
+				})
 
-	for prov: ProvinceData in provinces.values():
-		if prov != null:
-			candidates.append({
-				"id": prov.province_id,
-				"type": "province",
-				"pos": prov.map_position,
-				"radius": 56.0
-			})
+		for prov: ProvinceData in provinces.values():
+			if prov != null:
+				var eff_r: float = CampaignInputRouter.calculate_effective_world_radius(56.0, zoom_x)
+				candidates.append({
+					"id": prov.province_id,
+					"type": "province",
+					"pos": prov.map_position,
+					"radius": eff_r
+				})
 
 	var pick: Dictionary = CampaignInputRouter.pick_candidate(tap_world_pos, candidates, selected_entity_id)
 	if not pick.get("hit", false):

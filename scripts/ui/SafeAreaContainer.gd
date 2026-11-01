@@ -23,7 +23,7 @@ func _on_viewport_size_changed() -> void:
 	# Debounce by 1 frame to let fold/unfold or orientation rotation settle
 	if is_inside_tree():
 		var tree: SceneTree = get_tree()
-		if tree != null:
+		if tree != null and not tree.process_frame.is_connected(apply_safe_area):
 			tree.process_frame.connect(apply_safe_area, CONNECT_ONE_SHOT)
 	else:
 		apply_safe_area()
