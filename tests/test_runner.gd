@@ -14,6 +14,7 @@ const TestTurnPipeline = preload("res://tests/test_turn_pipeline.gd")
 const TestCampaignAI = preload("res://tests/test_campaign_ai.gd")
 const TestTurnManager = preload("res://tests/test_turn_manager.gd")
 const TestSaveManager = preload("res://tests/test_save_manager.gd")
+const TestCampaignInputRouter = preload("res://tests/test_campaign_input_router.gd")
 
 func _init() -> void:
 	print("\n==========================================")
@@ -160,6 +161,16 @@ func _init() -> void:
 		total_failures += sm_failures.size()
 		print("  -> FAILED: TestSaveManager (%d errors)" % sm_failures.size())
 		for f: String in sm_failures:
+			print("     * " + f)
+
+	print("[RUNNING] TestCampaignInputRouter...")
+	var ir_failures: Array[String] = TestCampaignInputRouter.run_all_tests()
+	if ir_failures.is_empty():
+		print("  -> PASSED: TestCampaignInputRouter")
+	else:
+		total_failures += ir_failures.size()
+		print("  -> FAILED: TestCampaignInputRouter (%d errors)" % ir_failures.size())
+		for f: String in ir_failures:
 			print("     * " + f)
 			
 	print("\n------------------------------------------")
